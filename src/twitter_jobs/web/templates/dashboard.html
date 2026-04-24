@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{% if page == "all" %}All jobs{% else %}Inbox{% endif %} — twitter_jobs{% endblock %}
+
+{% block content %}
+<h2>{% if page == "all" %}All jobs{% else %}New jobs{% endif %}</h2>
+
+<p>
+  <a class="role-chip {% if not active_role %}active{% endif %}" href="{{ '/all' if page == 'all' else '/' }}">All roles</a>
+  {% for key, label in role_labels.items() %}
+    <a class="role-chip {% if active_role == key %}active{% endif %}"
+       href="{{ '/all?role=' + key if page == 'all' else '/?role=' + key }}">{{ label }}</a>
+  {% endfor %}
+</p>
+
+{% if page != "all" %}
+<form action="/" method="get">
+  <input type="search" name="q" value="{{ text_query }}" placeholder="Search company, location, tweet text…">
+  {% if active_role %}<input type="hidden" name="role" value="{{ active_role }}">{% endif %}
+</form>
+{% endif %}
+
+{% if not jobs %}
+  <p><em>No jobs yet.</em></p>
+{% else %}
+  <div id="job-list">
+    {% for job, tweet in jobs %}
+      {% include "partials/job_row.html" %}
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

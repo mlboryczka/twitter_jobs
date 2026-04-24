@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}twitter_jobs{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <style>
+    .role-chip {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border-radius: 0.25rem;
+      background: var(--pico-secondary-background);
+      color: var(--pico-secondary-inverse);
+      font-size: 0.8rem;
+      text-decoration: none;
+      margin-right: 0.35rem;
+    }
+    .role-chip.active {
+      background: var(--pico-primary-background);
+      color: var(--pico-primary-inverse);
+    }
+    .job-card {
+      border: 1px solid var(--pico-muted-border-color);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .job-meta {
+      color: var(--pico-muted-color);
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+    .job-actions button {
+      display: inline-block;
+      margin-right: 0.35rem;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.85rem;
+    }
+    .job-reasoning {
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--pico-code-background-color);
+      border-radius: 0.25rem;
+      font-size: 0.9rem;
+    }
+    .manual-review-banner {
+      background: var(--pico-mark-background-color);
+      color: var(--pico-mark-color);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.25rem;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+<main class="container">
+  <nav>
+    <ul>
+      <li><strong>twitter_jobs</strong></li>
+    </ul>
+    <ul>
+      <li><a href="/" {% if page == "dashboard" %}aria-current="page"{% endif %}>Dashboard</a></li>
+      <li><a href="/review" {% if page == "review" %}aria-current="page"{% endif %}>Review</a></li>
+      <li><a href="/all" {% if page == "all" %}aria-current="page"{% endif %}>All</a></li>
+      <li><a href="/health">Health</a></li>
+    </ul>
+  </nav>
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

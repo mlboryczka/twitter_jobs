@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Review queue — twitter_jobs{% endblock %}
+
+{% block content %}
+<h2>Manual review queue</h2>
+<p><small>Posts where the classifier couldn't see the actual content (image-only postings). Skim and action them by hand.</small></p>
+
+{% if not jobs %}
+  <p><em>Nothing to review right now.</em></p>
+{% else %}
+  <div id="job-list">
+    {% for job, tweet in jobs %}
+      {% include "partials/job_row.html" %}
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

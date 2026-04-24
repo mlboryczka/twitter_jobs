@@ -1,0 +1,57 @@
+<article class="job-card" id="job-{{ job.tweet_id }}">
+  {% if job.needs_manual_review %}
+    <div class="manual-review-banner">
+      Manual review — {{ job.classifier_reasoning }}
+    </div>
+  {% endif %}
+
+  <div>
+    <span class="role-chip active">{{ role_labels.get(job.role_category, job.role_category) }}</span>
+    {% if job.seniority %}<span class="role-chip">{{ job.seniority }}</span>{% endif %}
+    {% if job.is_remote %}<span class="role-chip">remote</span>{% endif %}
+    {% if job.status and job.status != "new" %}<span class="role-chip">{{ job.status }}</span>{% endif %}
+    {% if job.company %}<strong>{{ job.company }}</strong>{% endif %}
+    {% if job.location %} — {{ job.location }}{% endif %}
+  </div>
+
+  <p>{{ tweet.text }}</p>
+
+  <div class="job-meta">
+    @{{ tweet.author.username }} · {{ tweet.created_at.strftime("%Y-%m-%d %H:%M") }}
+    · <a href="https://x.com/{{ tweet.author.username }}/status/{{ tweet.tweet_id }}" target="_blank" rel="noopener">View on X</a>
+    {% if job.apply_link %} · <a href="{{ job.apply_link }}" target="_blank" rel="noopener">Apply</a>{% endif %}
+  </div>
+
+  {% if job.classifier_reasoning and not job.needs_manual_review %}
+    <details class="job-reasoning">
+      <summary>Classifier reasoning</summary>
+      <p>{{ job.classifier_reasoning }}</p>
+    </details>
+  {% endif %}
+
+  <div class="job-actions" style="margin-top:0.6rem;">
+    <button
+      hx-post="/jobs/{{ job.tweet_id }}/status"
+      hx-vals='{"new_status": "applied"}'
+      hx-target="#job-{{ job.tweet_id }}"
+      hx-swap="outerHTML">
+      Applied
+    </button>
+    <button
+      hx-post="/jobs/{{ job.tweet_id }}/status"
+      hx-vals='{"new_status": "seen"}'
+      hx-target="#job-{{ job.tweet_id }}"
+      hx-swap="outerHTML"
+      class="secondary">
+      Seen
+    </button>
+    <button
+      hx-post="/jobs/{{ job.tweet_id }}/dismiss"
+      hx-vals='{"reason": "not-a-fit"}'
+      hx-target="#job-{{ job.tweet_id }}"
+      hx-swap="outerHTML"
+      class="contrast">
+      Dismiss
+    </button>
+  </div>
+</article>
