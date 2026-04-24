@@ -1,8 +1,4 @@
-"""Home-timeline feed worker — paginated pulls, upserts, cursor state.
-
-In Phase 5 this module will also dispatch classification. For now it only
-ingests and records sources.
-"""
+"""Home-timeline feed worker — paginated pulls, upserts, cursor state, classification dispatch."""
 
 from __future__ import annotations
 
@@ -14,9 +10,16 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from twitter_jobs.classify.classifier import JobClassification, classify
+from twitter_jobs.classify.prefilter import (
+    BIO_RECRUITER_PATTERNS,
+    WEAK_HIRING_PATTERNS,
+    is_potential_job,
+)
 from twitter_jobs.config import get_settings
-from twitter_jobs.db.models import ApiCall, Author, Tweet, TweetSource, WorkerState
+from twitter_jobs.db.models import ApiCall, Author, JobPosting, Tweet, TweetSource, WorkerState
 from twitter_jobs.db.session import session_scope
+from twitter_jobs.ingest.threads import reconstruct_thread
 from twitter_jobs.x_api.auth import XAuth
 from twitter_jobs.x_api.client import XClient
 from twitter_jobs.x_api.endpoints import get_home_timeline
@@ -25,14 +28,12 @@ logger = logging.getLogger(__name__)
 
 FEED_SINCE_ID_KEY = "feed_since_id"
 LAST_PULL_SUMMARY_KEY = "feed_last_pull_summary"
-MAX_PAGES_PER_RUN = 10  # safety cap so a runaway call can't blow through budget
+MAX_PAGES_PER_RUN = 10
+IMAGE_SHORT_TEXT_THRESHOLD = 140  # chars
 
 
 async def run_feed_pull() -> dict[str, Any]:
-    """Pull new tweets from the home timeline since the last cursor.
-
-    Returns a summary dict: {new_tweets, api_calls, cost_usd, pages}.
-    """
+    """Pull new tweets from the home timeline since the last cursor, classify hits."""
     settings = get_settings()
     if not settings.x_user_numeric_id:
         raise RuntimeError("X_USER_NUMERIC_ID must be set for the feed worker.")
@@ -46,9 +47,10 @@ async def run_feed_pull() -> dict[str, Any]:
     pages = 0
     new_tweets_total = 0
     api_calls_total = 0
-    cost_total = 0.0
     newest_id_seen = since_id
     next_token: str | None = None
+    jobs_inserted = 0
+    manual_review_inserted = 0
 
     async with XClient(auth) as client:
         while True:
@@ -76,17 +78,22 @@ async def run_feed_pull() -> dict[str, Any]:
                 break
 
             async with session_scope() as session:
+                existing_ids = await _existing_tweet_ids(session, [t["id"] for t in data])
                 inserted = await _upsert_page(session, data, includes)
 
+            new_ids = [t["id"] for t in data if t["id"] not in existing_ids]
             new_tweets_total += inserted
-            # Track the newest tweet id for cursor update.
             page_newest = meta.get("newest_id")
             if page_newest and (
                 newest_id_seen is None or _id_gt(page_newest, newest_id_seen)
             ):
                 newest_id_seen = page_newest
 
-            # Early exit: nothing in this page was new.
+            # Classify only the newly-ingested tweets in this page.
+            jobs, manual = await _classify_new(client, data, includes, new_ids)
+            jobs_inserted += jobs
+            manual_review_inserted += manual
+
             if inserted == 0:
                 logger.info(
                     "feed_pull page %d: 0 new tweets, stopping pagination", pages
@@ -97,7 +104,6 @@ async def run_feed_pull() -> dict[str, Any]:
             if not next_token:
                 break
 
-    # Best-effort cost total from api_calls we just inserted.
     async with session_scope() as session:
         cost_total = await _sum_recent_cost(session, pages)
         if newest_id_seen and newest_id_seen != since_id:
@@ -107,12 +113,132 @@ async def run_feed_pull() -> dict[str, Any]:
             "api_calls": api_calls_total,
             "cost_usd": cost_total,
             "pages": pages,
+            "jobs_inserted": jobs_inserted,
+            "manual_review_inserted": manual_review_inserted,
             "ran_at": datetime.utcnow().isoformat() + "Z",
         }
         await _write_worker_state(session, LAST_PULL_SUMMARY_KEY, summary)
 
     logger.info("feed_pull done: %s", summary)
     return summary
+
+
+async def _classify_new(
+    client: XClient,
+    data: list[dict[str, Any]],
+    includes: dict[str, Any],
+    new_ids: list[str],
+) -> tuple[int, int]:
+    """Run prefilter + classifier over newly-ingested tweets. Returns (jobs, manual_review)."""
+    if not new_ids:
+        return 0, 0
+
+    users_by_id = {u["id"]: u for u in includes.get("users") or []}
+    ref_tweets_by_id = {t["id"]: t for t in includes.get("tweets") or []}
+
+    jobs_inserted = 0
+    manual_inserted = 0
+
+    for t in data:
+        if t["id"] not in new_ids:
+            continue
+        author = users_by_id.get(t.get("author_id", ""), {}) or {}
+
+        # --- image flagging: skip classifier, push to manual review ---
+        if _should_flag_as_image(t, author, ref_tweets_by_id):
+            await _insert_job_posting(
+                tweet_id=t["id"],
+                classification=JobClassification(
+                    is_target=True,
+                    role_category="unknown",
+                    company=None,
+                    location=None,
+                    is_remote=None,
+                    seniority=None,
+                    apply_link=None,
+                    classifier_reasoning="Flagged for manual review: media attached with short caption + hiring signal. Classifier can't see images.",
+                ),
+                needs_manual_review=True,
+            )
+            manual_inserted += 1
+            continue
+
+        result = is_potential_job(t, author, includes_tweets_by_id=ref_tweets_by_id)
+        if not result.hit:
+            continue
+
+        # Reconstruct thread if this is a head-of-thread.
+        thread_tweets = [t]
+        try:
+            thread_tweets = await reconstruct_thread(client, t, author)
+        except Exception:
+            logger.exception("thread reconstruction failed, continuing with single tweet")
+
+        classification = await classify(t, author, thread_tweets)
+        if classification is None or not classification.is_target:
+            continue
+
+        await _insert_job_posting(
+            tweet_id=t["id"],
+            classification=classification,
+            needs_manual_review=False,
+        )
+        jobs_inserted += 1
+
+    return jobs_inserted, manual_inserted
+
+
+def _should_flag_as_image(
+    tweet: dict[str, Any],
+    author: dict[str, Any],
+    ref_tweets_by_id: dict[str, dict[str, Any]],
+) -> bool:
+    """Tweet has media + short caption + some hiring signal → manual review."""
+    attachments = tweet.get("attachments") or {}
+    media_keys = attachments.get("media_keys") or []
+    if not media_keys:
+        return False
+
+    text = tweet.get("text") or ""
+    # unwrap retweet
+    for r in tweet.get("referenced_tweets") or []:
+        if r.get("type") == "retweeted":
+            src = ref_tweets_by_id.get(r.get("id", ""))
+            if src and src.get("text"):
+                text = src["text"]
+
+    if len(text) > IMAGE_SHORT_TEXT_THRESHOLD:
+        return False
+
+    bio = (author or {}).get("description") or ""
+    bio_recruiter = any(p.search(bio) for p in BIO_RECRUITER_PATTERNS)
+    weak_hiring = any(p.search(text) for p in WEAK_HIRING_PATTERNS)
+    return bio_recruiter or weak_hiring
+
+
+async def _insert_job_posting(
+    *,
+    tweet_id: str,
+    classification: JobClassification,
+    needs_manual_review: bool,
+) -> None:
+    row = {
+        "tweet_id": tweet_id,
+        "role_category": classification.role_category,
+        "company": classification.company,
+        "location": classification.location,
+        "is_remote": classification.is_remote,
+        "seniority": classification.seniority,
+        "apply_link": classification.apply_link,
+        "classifier_reasoning": classification.classifier_reasoning,
+        "needs_manual_review": needs_manual_review,
+    }
+    async with session_scope() as session:
+        await session.execute(
+            pg_insert(JobPosting)
+            .values(row)
+            .on_conflict_do_nothing(index_elements=[JobPosting.tweet_id])
+        )
 
 
 async def _read_since_id(session: AsyncSession) -> str | None:
@@ -140,15 +266,21 @@ async def _write_worker_state(
 
 
 async def _sum_recent_cost(session: AsyncSession, n_pages: int) -> float:
-    """Sum the cost_usd of the last n_pages api_calls rows (best-effort)."""
     if n_pages <= 0:
         return 0.0
     result = await session.execute(
-        select(ApiCall.cost_usd)
-        .order_by(ApiCall.id.desc())
-        .limit(n_pages)
+        select(ApiCall.cost_usd).order_by(ApiCall.id.desc()).limit(n_pages)
     )
     return float(sum(row for row in result.scalars()))
+
+
+async def _existing_tweet_ids(
+    session: AsyncSession, ids: list[str]
+) -> set[str]:
+    if not ids:
+        return set()
+    res = await session.execute(select(Tweet.tweet_id).where(Tweet.tweet_id.in_(ids)))
+    return {r for (r,) in res.all()}
 
 
 async def _upsert_page(
@@ -156,7 +288,6 @@ async def _upsert_page(
     tweets: list[dict[str, Any]],
     includes: dict[str, Any],
 ) -> int:
-    """Upsert one page of tweets + authors + source rows. Returns new-tweet count."""
     users = {u["id"]: u for u in includes.get("users", [])}
 
     if users:
@@ -231,8 +362,6 @@ async def _upsert_page(
 
 
 def _id_gt(a: str, b: str) -> bool:
-    """Lexicographic comparison is incorrect for different-length numeric ids;
-    compare by length first, then lexicographically."""
     if len(a) != len(b):
         return len(a) > len(b)
     return a > b
