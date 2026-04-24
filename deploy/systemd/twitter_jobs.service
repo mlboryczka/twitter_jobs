@@ -1,0 +1,25 @@
+[Unit]
+Description=twitter_jobs — personal X job posting intelligence
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=app
+Group=app
+WorkingDirectory=/opt/twitter_jobs
+EnvironmentFile=/opt/twitter_jobs/.env
+ExecStart=/home/app/.local/bin/uv run python -m twitter_jobs.main
+Restart=on-failure
+RestartSec=5s
+# Tighten the process.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/twitter_jobs
+# Give classifier requests and X pulls time to finish before SIGKILL.
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+# Replace yourdomain.com with your actual domain.
+# Basic auth is also enforced by the FastAPI app itself using
+# DASHBOARD_USERNAME / DASHBOARD_PASSWORD — the Caddy layer below is optional
+# belt-and-braces. If you prefer a single auth layer, delete the basicauth
+# block here and rely on the app-level check only.
+
+yourdomain.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8000
+}
