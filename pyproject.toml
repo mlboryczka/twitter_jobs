@@ -1,0 +1,34 @@
+[project]
+name = "twitter-jobs"
+version = "0.1.0"
+description = "Personal X (Twitter) job posting intelligence — monitors the home timeline, classifies with Claude, surfaces in a dashboard."
+requires-python = ">=3.12"
+readme = "README.md"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "alembic>=1.14",
+    "httpx>=0.28",
+    "apscheduler>=3.11",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.20",
+    "anthropic>=0.40",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.7",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+twitter-jobs = "twitter_jobs.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/twitter_jobs"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
