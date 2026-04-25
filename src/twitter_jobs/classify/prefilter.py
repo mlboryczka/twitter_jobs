@@ -1,15 +1,18 @@
 """Regex-based prefilter — cheap first pass to find tweets potentially worth classifying.
 
-Two groups of patterns:
+Strategy: be **loose**. The prefilter only filters out tweets that are clearly
+not hiring-adjacent. The Claude classifier is the strict filter; it's cheap
+enough (~$0.001/tweet) that we'd rather pay it to reject false positives than
+miss a real job posting via a too-narrow regex.
 
-- HIRING_PATTERNS: phrases humans use when they're the hiring party.
-- ROLE_PATTERNS: keywords that plausibly map to one of our five target roles.
+A tweet is a hit if any of these are true:
 
-A tweet is a hit if either (a) it matches at least one HIRING_PATTERN plus at
-least one ROLE_PATTERN, OR (b) the author bio has recruiting/talent signals and
-the tweet shows *any* hiring signal. The second case catches talent partners
-whose whole feed is openings, so they post things like "we need one more Corp
-Dev Associate" without the "we are hiring" boilerplate.
+- It contains a hiring phrase ("we're hiring", "open role", "looking for", ...).
+- The author bio looks like a recruiter/talent person AND the tweet has any
+  weak hiring word (so a talent partner posting "another opening" still hits).
+- It contains a target-role keyword (e.g. "corp dev", "chief of staff"), even
+  with no canonical hiring phrase — covers tweets like "open seat for someone
+  who's done M&A".
 
 If the tweet is a retweet, we run the filter against the referenced tweet's
 text (populated via includes.tweets), not the RT wrapper.
@@ -33,7 +36,7 @@ HIRING_PATTERNS = [
         r"\bhiring for\b",
         r"\bapply (?:here|via|at|now|today)\b",
         r"\bDM (?:me|us)\b",
-        r"\blooking for (?:a|an|our next|my next)\b",
+        r"\blooking for\b",
         r"\brecruiting (?:a|an|for)\b",
         r"\b(?:new|fresh) (?:role|roles|opening|openings)\b",
         r"\bwe(?:'re| are) looking\b",
@@ -49,6 +52,8 @@ ROLE_PATTERNS = [
     re.compile(p, re.IGNORECASE)
     for p in [
         r"\bcorp(?:orate)?[ \-]?dev(?:elopment)?\b",
+        r"\bM&A\b",
+        r"\bmergers (?:&|and) acquisitions\b",
         r"\bcorp(?:orate)? strategy\b",
         r"\bstrategic finance\b",
         r"\bstrat[ \-]?fin\b",
@@ -139,8 +144,8 @@ def is_potential_job(
     roles = _first_matches(text, ROLE_PATTERNS)
     bio_recruiter = bool(_first_matches(bio, BIO_RECRUITER_PATTERNS))
 
-    # Primary rule: strong hiring phrase AND role keyword.
-    if hiring and roles:
+    # Any hiring phrase → hit. Classifier decides if it's a target role.
+    if hiring:
         return PrefilterResult(
             hit=True,
             hiring_matches=hiring,
@@ -149,8 +154,18 @@ def is_potential_job(
             text_used=text,
         )
 
-    # Secondary rule: recruiter bio + any weak hiring word + any role keyword.
-    if bio_recruiter and roles:
+    # Any target-role keyword → hit, even without a canonical hiring phrase.
+    if roles:
+        return PrefilterResult(
+            hit=True,
+            hiring_matches=hiring,
+            role_matches=roles,
+            bio_recruiter_hit=bio_recruiter,
+            text_used=text,
+        )
+
+    # Recruiter-bio author + any weak hiring word → hit.
+    if bio_recruiter:
         weak = _first_matches(text, WEAK_HIRING_PATTERNS)
         if weak:
             return PrefilterResult(

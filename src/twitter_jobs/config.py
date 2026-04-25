@@ -46,8 +46,9 @@ class Settings(BaseSettings):
     app_port: int = Field(8000, alias="APP_PORT")
     log_level: str = Field("INFO", alias="LOG_LEVEL")
 
-    # Scheduler intervals (seconds)
-    feed_pull_interval: int = Field(14400, alias="FEED_PULL_INTERVAL")
+    # Scheduler intervals (seconds). Default daily — home-timeline jobs aren't
+    # time-sensitive enough to justify hourly pulls, and X charges per tweet.
+    feed_pull_interval: int = Field(86400, alias="FEED_PULL_INTERVAL")
 
     @property
     def project_root(self) -> Path:
