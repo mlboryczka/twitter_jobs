@@ -332,7 +332,7 @@ async def _upsert_page(
                 "tweet_id": t["id"],
                 "author_id": t.get("author_id") or "",
                 "text": t.get("text", ""),
-                "created_at": t.get("created_at"),
+                "created_at": _parse_x_ts(t.get("created_at")),
                 "lang": t.get("lang"),
                 "public_metrics": t.get("public_metrics") or {},
                 "entities": t.get("entities"),
@@ -365,6 +365,14 @@ def _id_gt(a: str, b: str) -> bool:
     if len(a) != len(b):
         return len(a) > len(b)
     return a > b
+
+
+def _parse_x_ts(value: str | None) -> datetime | None:
+    """Parse X's ISO-8601 timestamp (e.g. '2026-04-25T22:40:34.000Z') to datetime."""
+    if value is None:
+        return None
+    # Python 3.11+ accepts the trailing 'Z' directly.
+    return datetime.fromisoformat(value)
 
 
 async def get_last_pull_summary() -> dict[str, Any] | None:
