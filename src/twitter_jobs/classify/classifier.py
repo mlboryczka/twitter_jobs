@@ -243,15 +243,39 @@ async def _user_feedback_block() -> str:
     if not rows:
         return ""
 
-    lines = [
-        "User feedback on prior classifications "
-        "(THIS user's actual taste — weight these heavily):"
-    ]
+    header = (
+        "User feedback on prior classifications. THIS user has personally "
+        "accepted or dismissed each tweet below. These are the STRONGEST signal "
+        "of the user's actual preferences and override the generic examples "
+        "above when they conflict.\n\n"
+        "How to use these:\n"
+        "- If a new tweet closely resembles a DISMISSED example for the same "
+        "kind of reason, strongly prefer is_target=false.\n"
+        "- If a new tweet closely resembles an ACCEPTED example, treat that as "
+        "positive evidence for is_target=true.\n"
+        "- The user's note (after \"note:\") explains WHY they made each call. "
+        "Generalize from those reasons; don't just match exact text.\n"
+        "- The classifier's original output (after \"originally classified as:\") "
+        "shows what we predicted last time. If the user dismissed it, our "
+        "prediction was likely wrong for that pattern."
+    )
+
+    lines = [header]
     for job, tweet in rows:
         decision = "ACCEPTED" if job.status == "accepted" else "DISMISSED"
         note = f" — note: {job.user_feedback}" if job.user_feedback else ""
         text = (tweet.text or "").replace("\n", " ").strip()[:280]
-        lines.append(f"- {decision}{note}\n  Text: {text}")
+        original_parts: list[str] = [f"role_category={job.role_category}"]
+        if job.seniority:
+            original_parts.append(f"seniority={job.seniority}")
+        if job.company:
+            original_parts.append(f"company={job.company}")
+        original = ", ".join(original_parts)
+        lines.append(
+            f"- {decision}{note}\n"
+            f"  Originally classified as: {original}\n"
+            f"  Tweet text: {text}"
+        )
     return "\n\n".join(lines)
 
 
@@ -273,7 +297,12 @@ async def classify(
 
     user_message = _format_tweet_block(tweet, author, thread_tweets)
     system_parts = [SYSTEM_PROMPT, _few_shot_block()]
-    feedback = await _user_feedback_block()
+    try:
+        feedback = await _user_feedback_block()
+    except Exception:
+        # A DB hiccup mustn't kill classification — fall back to static examples.
+        logger.exception("failed to load user feedback; classifying without it")
+        feedback = ""
     if feedback:
         system_parts.append(feedback)
     system = "\n\n".join(system_parts)
