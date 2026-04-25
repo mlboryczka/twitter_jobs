@@ -178,11 +178,53 @@ def _format_tweet_block(
     return "\n".join(lines)
 
 
+FEEDBACK_EXAMPLE_LIMIT = 20
+
+
 def _few_shot_block() -> str:
     rows = []
     for ex in FEW_SHOT_EXAMPLES:
         rows.append(f"- Text: {ex['text']}\n  Expected: {json.dumps(ex['expected'])}")
     return "Examples of how to classify:\n\n" + "\n\n".join(rows)
+
+
+async def _user_feedback_block() -> str:
+    """Pull the user's most-recent accept/dismiss decisions and format as examples.
+
+    Empty string if there's no feedback yet — just relies on the static examples.
+    Imported lazily to avoid a circular import (classifier <- feedback <- db <- ...).
+    """
+    from sqlalchemy import select
+    from sqlalchemy.orm import joinedload
+
+    from twitter_jobs.db.models import JobPosting, Tweet
+    from twitter_jobs.db.session import session_scope
+
+    async with session_scope() as session:
+        stmt = (
+            select(JobPosting, Tweet)
+            .join(Tweet, JobPosting.tweet_id == Tweet.tweet_id)
+            .options(joinedload(Tweet.author))
+            .where(JobPosting.status.in_(["accepted", "dismissed"]))
+            .order_by(JobPosting.status_changed_at.desc())
+            .limit(FEEDBACK_EXAMPLE_LIMIT)
+        )
+        result = await session.execute(stmt)
+        rows = result.unique().all()
+
+    if not rows:
+        return ""
+
+    lines = [
+        "User feedback on prior classifications "
+        "(THIS user's actual taste — weight these heavily):"
+    ]
+    for job, tweet in rows:
+        decision = "ACCEPTED" if job.status == "accepted" else "DISMISSED"
+        note = f" — note: {job.user_feedback}" if job.user_feedback else ""
+        text = (tweet.text or "").replace("\n", " ").strip()[:280]
+        lines.append(f"- {decision}{note}\n  Text: {text}")
+    return "\n\n".join(lines)
 
 
 async def classify(
@@ -202,7 +244,11 @@ async def classify(
     thread_tweets = thread_tweets or [tweet]
 
     user_message = _format_tweet_block(tweet, author, thread_tweets)
-    system = SYSTEM_PROMPT + "\n\n" + _few_shot_block()
+    system_parts = [SYSTEM_PROMPT, _few_shot_block()]
+    feedback = await _user_feedback_block()
+    if feedback:
+        system_parts.append(feedback)
+    system = "\n\n".join(system_parts)
 
     try:
         resp = await anthro.messages.create(

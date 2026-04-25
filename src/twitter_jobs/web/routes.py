@@ -95,44 +95,41 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
             },
         )
 
-    @router.post("/jobs/{tweet_id}/status", response_class=HTMLResponse)
-    async def change_status(
-        tweet_id: str,
-        request: Request,
-        new_status: str = Form(...),
-        _: str = Depends(require_basic_auth),
+    async def _record_decision(
+        tweet_id: str, request: Request, status_value: str, feedback: str
     ) -> HTMLResponse:
-        if new_status not in {"new", "seen", "applied", "dismissed"}:
-            raise HTTPException(status_code=400, detail="invalid status")
         async with session_scope() as session:
             job = await session.get(JobPosting, tweet_id)
             if job is None:
                 raise HTTPException(status_code=404)
-            job.status = new_status
+            job.status = status_value
+            job.user_feedback = feedback.strip() or None
+            if status_value == "dismissed":
+                # Mirror feedback into dismissal_reason for backward-compat readers.
+                job.dismissal_reason = feedback.strip() or None
             job.status_changed_at = datetime.now(timezone.utc)
             tweet = await session.get(
                 Tweet, tweet_id, options=[joinedload(Tweet.author)]
             )
         return _render_job_row(request, job, tweet)
 
+    @router.post("/jobs/{tweet_id}/accept", response_class=HTMLResponse)
+    async def accept(
+        tweet_id: str,
+        request: Request,
+        feedback: str = Form(""),
+        _: str = Depends(require_basic_auth),
+    ) -> HTMLResponse:
+        return await _record_decision(tweet_id, request, "accepted", feedback)
+
     @router.post("/jobs/{tweet_id}/dismiss", response_class=HTMLResponse)
     async def dismiss(
         tweet_id: str,
         request: Request,
-        reason: str = Form(""),
+        feedback: str = Form(""),
         _: str = Depends(require_basic_auth),
     ) -> HTMLResponse:
-        async with session_scope() as session:
-            job = await session.get(JobPosting, tweet_id)
-            if job is None:
-                raise HTTPException(status_code=404)
-            job.status = "dismissed"
-            job.dismissal_reason = reason or None
-            job.status_changed_at = datetime.now(timezone.utc)
-            tweet = await session.get(
-                Tweet, tweet_id, options=[joinedload(Tweet.author)]
-            )
-        return _render_job_row(request, job, tweet)
+        return await _record_decision(tweet_id, request, "dismissed", feedback)
 
     @router.get("/health")
     async def health() -> dict[str, Any]:

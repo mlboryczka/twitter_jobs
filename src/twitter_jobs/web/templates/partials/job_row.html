@@ -30,28 +30,29 @@
   {% endif %}
 
   <div class="job-actions" style="margin-top:0.6rem;">
-    <button
-      hx-post="/jobs/{{ job.tweet_id }}/status"
-      hx-vals='{"new_status": "applied"}'
-      hx-target="#job-{{ job.tweet_id }}"
-      hx-swap="outerHTML">
-      Applied
-    </button>
-    <button
-      hx-post="/jobs/{{ job.tweet_id }}/status"
-      hx-vals='{"new_status": "seen"}'
-      hx-target="#job-{{ job.tweet_id }}"
-      hx-swap="outerHTML"
-      class="secondary">
-      Seen
-    </button>
-    <button
-      hx-post="/jobs/{{ job.tweet_id }}/dismiss"
-      hx-vals='{"reason": "not-a-fit"}'
-      hx-target="#job-{{ job.tweet_id }}"
-      hx-swap="outerHTML"
-      class="contrast">
-      Dismiss
-    </button>
+    {% if job.status == "new" %}
+      <details class="decision-form">
+        <summary class="decision-trigger accept-trigger">Accept</summary>
+        <form hx-post="/jobs/{{ job.tweet_id }}/accept"
+              hx-target="#job-{{ job.tweet_id }}"
+              hx-swap="outerHTML"
+              style="display:flex; gap:0.4rem; margin-top:0.4rem;">
+          <input type="text" name="feedback" placeholder="Why is this a good fit? (optional, helps the classifier learn)" style="flex:1;">
+          <button type="submit">Save</button>
+        </form>
+      </details>
+      <details class="decision-form">
+        <summary class="decision-trigger dismiss-trigger">Dismiss</summary>
+        <form hx-post="/jobs/{{ job.tweet_id }}/dismiss"
+              hx-target="#job-{{ job.tweet_id }}"
+              hx-swap="outerHTML"
+              style="display:flex; gap:0.4rem; margin-top:0.4rem;">
+          <input type="text" name="feedback" placeholder="Why dismiss? (optional, helps the classifier learn)" style="flex:1;">
+          <button type="submit" class="contrast">Save</button>
+        </form>
+      </details>
+    {% else %}
+      <span class="role-chip">{{ job.status }}{% if job.user_feedback %} — {{ job.user_feedback }}{% endif %}</span>
+    {% endif %}
   </div>
 </article>

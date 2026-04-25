@@ -38,6 +38,35 @@
       padding: 0.25rem 0.75rem;
       font-size: 0.85rem;
     }
+    .job-actions .decision-form {
+      display: inline-block;
+      margin-right: 0.5rem;
+      vertical-align: top;
+    }
+    .job-actions .decision-trigger {
+      display: inline-block;
+      cursor: pointer;
+      padding: 0.4rem 1rem;
+      border-radius: 0.25rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      list-style: none;
+      user-select: none;
+    }
+    .job-actions .decision-trigger::-webkit-details-marker {
+      display: none;
+    }
+    .job-actions .accept-trigger {
+      background: var(--pico-primary-background);
+      color: var(--pico-primary-inverse);
+    }
+    .job-actions .dismiss-trigger {
+      background: var(--pico-secondary-background);
+      color: var(--pico-secondary-inverse);
+    }
+    .job-actions details[open] .decision-trigger {
+      margin-bottom: 0.25rem;
+    }
     .job-reasoning {
       margin-top: 0.5rem;
       padding: 0.5rem 0.75rem;

@@ -166,6 +166,7 @@ class JobPosting(Base):
         DateTime(timezone=True), nullable=True
     )
     dismissal_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    user_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
     classified_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -183,7 +184,7 @@ class JobPosting(Base):
             name="ck_job_postings_seniority",
         ),
         CheckConstraint(
-            "status IN ('new', 'seen', 'applied', 'dismissed')",
+            "status IN ('new', 'accepted', 'dismissed')",
             name="ck_job_postings_status",
         ),
         Index("ix_job_postings_status_classified", "status", "classified_at"),
