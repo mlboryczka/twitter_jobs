@@ -115,6 +115,28 @@ class XClient:
                 await asyncio.sleep(backoff)
                 continue
 
+            # 3xx — surface as error. We don't auto-follow redirects because
+            # the X v2 API shouldn't be redirecting 2xx-success calls; if it
+            # does, the request URL is wrong (e.g. malformed path) or the
+            # endpoint requires elevated access.
+            if 300 <= resp.status_code < 400:
+                location = resp.headers.get("location")
+                logger.error(
+                    "X API %s on %s; Location=%s body=%s",
+                    resp.status_code,
+                    path,
+                    location,
+                    resp.text[:500],
+                )
+                await self._log_api_call(
+                    path,
+                    resp.status_code,
+                    0,
+                    0,
+                    notes=f"redirect to {location}: {resp.text[:300]}",
+                )
+                raise XAPIError(resp.status_code, resp.text or f"redirect to {location}")
+
             # At this point we've either got a 2xx or a 4xx we don't handle.
             if resp.status_code >= 400:
                 await self._log_api_call(
