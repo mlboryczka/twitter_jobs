@@ -30,13 +30,11 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
     router = APIRouter()
 
     def _render_job_row(request: Request, job: JobPosting, tweet: Tweet) -> HTMLResponse:
-        ctx = {
-            "request": request,
-            "job": job,
-            "tweet": tweet,
-            "role_labels": ROLE_LABELS,
-        }
-        return templates.TemplateResponse("partials/job_row.html", ctx)
+        return templates.TemplateResponse(
+            request,
+            "partials/job_row.html",
+            {"job": job, "tweet": tweet, "role_labels": ROLE_LABELS},
+        )
 
     @router.get("/", response_class=HTMLResponse)
     async def dashboard(
@@ -47,9 +45,9 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
     ) -> HTMLResponse:
         jobs = await _list_jobs(statuses=["new"], role=role, text_query=q)
         return templates.TemplateResponse(
+            request,
             "dashboard.html",
             {
-                "request": request,
                 "jobs": jobs,
                 "role_labels": ROLE_LABELS,
                 "active_role": role,
@@ -65,9 +63,9 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
     ) -> HTMLResponse:
         jobs = await _list_jobs(needs_manual_review=True)
         return templates.TemplateResponse(
+            request,
             "review.html",
             {
-                "request": request,
                 "jobs": jobs,
                 "role_labels": ROLE_LABELS,
                 "page": "review",
@@ -86,9 +84,9 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         jobs = await _list_jobs(statuses=status_list, role=role, since=cutoff)
         return templates.TemplateResponse(
+            request,
             "dashboard.html",
             {
-                "request": request,
                 "jobs": jobs,
                 "role_labels": ROLE_LABELS,
                 "active_role": role,
