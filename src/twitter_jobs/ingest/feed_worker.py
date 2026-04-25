@@ -287,6 +287,8 @@ async def _upsert_page(
     session: AsyncSession,
     tweets: list[dict[str, Any]],
     includes: dict[str, Any],
+    *,
+    source_type: str = "feed",
 ) -> int:
     users = {u["id"]: u for u in includes.get("users", [])}
 
@@ -348,7 +350,7 @@ async def _upsert_page(
         .on_conflict_do_nothing(index_elements=[Tweet.tweet_id])
     )
 
-    source_rows = [{"tweet_id": t["id"], "source_type": "feed"} for t in tweets]
+    source_rows = [{"tweet_id": t["id"], "source_type": source_type} for t in tweets]
     await session.execute(
         pg_insert(TweetSource)
         .values(source_rows)
