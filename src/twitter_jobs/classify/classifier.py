@@ -136,6 +136,34 @@ FEW_SHOT_EXAMPLES = [
         "text": "Talent Partner here. My portfolio is hiring across: Chief of Staff (seed fintech), Strategic Finance (Series B commerce), Corp Dev (growth SaaS). DM for details.",
         "expected": {"is_target": True, "role_category": "cos", "reason": "multi-role; pick the first target category, note others in reasoning", "apply_link": None},
     },
+    {
+        "text": "GTN hires Mark Evans as Head of Corporate Development to lead M&A and growth strategy. #Fintech #Hiring",
+        "expected": {"is_target": False, "reason": "hire announcement (someone got the job), not a job posting"},
+    },
+    {
+        "text": "Stripe is hiring a Senior Corporate Development Manager to drive M&A pipeline. 6+ yrs IB/CD. Apply: stripe.com/jobs/corp-dev-mgr",
+        "expected": {"is_target": True, "role_category": "corp_dev", "seniority": "senior"},
+    },
+    {
+        "text": "We're hiring a Strategic Finance Lead at Ramp. Series D fintech, 4-6yrs IB+ops. DM me to chat.",
+        "expected": {"is_target": True, "role_category": "strategy", "seniority": "lead", "company": "Ramp", "apply_link": None},
+    },
+    {
+        "text": "This week's open Chief of Staff roles I'm tracking: Pilot (NYC), Brex (SF), Vercel (remote). DM if you want intros.",
+        "expected": {"is_target": False, "reason": "aggregator listing multiple companies, not a single posting we can act on"},
+    },
+    {
+        "text": "We just hit $50M ARR. Insane team execution. Btw we're hiring across functions if you want to come build with us.",
+        "expected": {"is_target": False, "reason": "self-promotion that mentions hiring in passing; no specific role to apply for"},
+    },
+    {
+        "text": "Anyone strong on deal-running and growth-stage strategy looking for their next thing? Building something in fintech, will share details by DM.",
+        "expected": {"is_target": True, "role_category": "corp_dev", "seniority": None, "apply_link": None, "reason": "borderline; plausibly corp_dev or strategy; pick corp_dev as best fit and flag uncertainty in reasoning"},
+    },
+    {
+        "text": "We're hiring a VP of Operations at our portco (Series C SaaS, $40M ARR, 200ppl). Apply: portco.com/careers/vp-ops",
+        "expected": {"is_target": True, "role_category": "ops", "seniority": "vp"},
+    },
 ]
 
 
