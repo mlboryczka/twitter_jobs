@@ -109,7 +109,7 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         request: Request,
         _: str = Depends(require_basic_auth),
     ) -> HTMLResponse:
-        jobs = await _list_jobs(needs_manual_review=True)
+        jobs = await _list_jobs(needs_manual_review=True, statuses=["new"])
         return templates.TemplateResponse(
             request,
             "review.html",

@@ -63,11 +63,11 @@
           <div class="md:col-span-5 flex items-center gap-sm min-w-0">
             <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-bold shrink-0">{{ (job.company or tweet.author.name or tweet.author.username or '?')[:1]|upper }}</div>
             <div class="min-w-0">
-              <p class="text-label-md text-on-background truncate">{{ job.company or (tweet.author.name or '@' ~ tweet.author.username) }}</p>
-              <p class="text-body-md text-on-surface-variant truncate">{{ tweet.text[:120] }}{% if tweet.text|length > 120 %}…{% endif %}</p>
+              <p class="text-label-md text-on-background truncate">{{ (job.company or (tweet.author.name or '@' ~ tweet.author.username))|x_text }}</p>
+              <p class="text-body-md text-on-surface-variant truncate">{{ (tweet.text[:120])|x_text }}{% if tweet.text|length > 120 %}…{% endif %}</p>
               <div class="flex items-center gap-xs mt-xs text-xs text-outline">
                 <span>@{{ tweet.author.username }}</span>
-                {% if job.location %}<span>·</span><span>{{ job.location }}</span>{% endif %}
+                {% if job.location %}<span>·</span><span>{{ job.location|x_text }}</span>{% endif %}
                 <a href="https://x.com/{{ tweet.author.username }}/status/{{ tweet.tweet_id }}" target="_blank" rel="noopener" class="text-primary hover:underline ml-xs">View</a>
               </div>
             </div>

@@ -22,7 +22,7 @@
     <p class="text-body-lg">Queue is empty.</p>
   </div>
 {% else %}
-  <div id="job-list" class="flex flex-col gap-md">
+  <div id="job-list" class="flex flex-col gap-md max-w-[820px]">
     {% for job, tweet in jobs %}
       {% include "partials/job_row.html" %}
     {% endfor %}
