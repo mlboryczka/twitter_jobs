@@ -1,14 +1,28 @@
 {% extends "base.html" %}
-{% block title %}Review queue — twitter_jobs{% endblock %}
+{% block title %}Manual review — twitter_jobs{% endblock %}
 
 {% block content %}
-<h2>Manual review queue</h2>
-<p><small>Posts where the classifier couldn't see the actual content (image-only postings). Skim and action them by hand.</small></p>
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-md">
+  <div>
+    <h1 class="text-h1 text-on-background">Manual Review Queue</h1>
+    <p class="text-body-md text-on-surface-variant mt-xs flex items-center gap-xs">
+      <span class="material-symbols-outlined text-base text-tertiary">error</span>
+      Tweets the classifier sent here because it couldn't read the attached image.
+    </p>
+  </div>
+  <div class="flex items-center gap-sm bg-surface-container-lowest px-md py-sm rounded-lg border border-outline-variant shadow-sm">
+    <span class="text-label-md text-on-surface-variant">Pending:</span>
+    <span class="text-h3 text-primary bg-surface-container-low px-sm py-xs rounded">{{ jobs|length }}</span>
+  </div>
+</header>
 
 {% if not jobs %}
-  <p><em>Nothing to review right now.</em></p>
+  <div class="flex flex-col items-center justify-center py-xl text-on-surface-variant gap-sm">
+    <span class="material-symbols-outlined text-5xl text-outline-variant">check_circle</span>
+    <p class="text-body-lg">Queue is empty.</p>
+  </div>
 {% else %}
-  <div id="job-list">
+  <div id="job-list" class="flex flex-col gap-md">
     {% for job, tweet in jobs %}
       {% include "partials/job_row.html" %}
     {% endfor %}

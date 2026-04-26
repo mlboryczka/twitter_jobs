@@ -128,23 +128,27 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         role: str | None = None,
         statuses: str | None = None,
         days: int = 30,
+        q: str | None = None,
         _: str = Depends(require_basic_auth),
     ) -> HTMLResponse:
         status_list = [s for s in (statuses or "").split(",") if s] or None
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-        jobs = await _list_jobs(statuses=status_list, role=role, since=cutoff)
+        jobs = await _list_jobs(
+            statuses=status_list, role=role, since=cutoff, text_query=q
+        )
         jobs.sort(key=lambda jt: get_priority(jt[0].industry))
         return templates.TemplateResponse(
             request,
-            "dashboard.html",
+            "all.html",
             {
                 "jobs": jobs,
                 "role_labels": ROLE_LABELS,
                 "industry_labels": INDUSTRY_LABELS,
                 "priority_for": get_priority,
                 "active_role": role,
-                "active_priority": None,
-                "text_query": "",
+                "active_statuses": statuses,
+                "active_days": days,
+                "text_query": q or "",
                 "page": "all",
             },
         )

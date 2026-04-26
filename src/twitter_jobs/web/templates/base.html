@@ -4,160 +4,92 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}twitter_jobs{% endblock %}</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#00629d",
+            "on-primary": "#ffffff",
+            "primary-container": "#1d9bf0",
+            "primary-fixed": "#cfe5ff",
+            "primary-fixed-dim": "#99cbff",
+            "on-primary-container": "#003050",
+            secondary: "#006c49",
+            "on-secondary": "#ffffff",
+            "secondary-container": "#6cf8bb",
+            "secondary-fixed": "#6ffbbe",
+            "secondary-fixed-dim": "#4edea3",
+            "on-secondary-container": "#00714d",
+            tertiary: "#be0037",
+            "tertiary-container": "#ff5c6f",
+            "tertiary-fixed": "#ffdada",
+            "tertiary-fixed-dim": "#ffb3b6",
+            "on-tertiary-container": "#630018",
+            error: "#ba1a1a",
+            "error-container": "#ffdad6",
+            "on-error-container": "#93000a",
+            background: "#f8f9ff",
+            surface: "#f8f9ff",
+            "on-background": "#0b1c30",
+            "on-surface": "#0b1c30",
+            "on-surface-variant": "#3f4851",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#eff4ff",
+            "surface-container": "#e5eeff",
+            "surface-container-high": "#dce9ff",
+            "surface-container-highest": "#d3e4fe",
+            "surface-variant": "#d3e4fe",
+            outline: "#6f7883",
+            "outline-variant": "#bfc7d3"
+          },
+          borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+          spacing: {
+            xs: "4px", sm: "8px", base: "8px", md: "16px", lg: "24px", xl: "40px",
+            gutter: "20px", "container-max": "1280px"
+          },
+          fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
+          fontSize: {
+            "label-sm": ["12px", { lineHeight: "1", letterSpacing: "0.02em", fontWeight: "500" }],
+            "label-md": ["14px", { lineHeight: "1", fontWeight: "600" }],
+            "body-md": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+            "body-lg": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+            h3: ["20px", { lineHeight: "1.4", letterSpacing: "-0.01em", fontWeight: "600" }],
+            h2: ["24px", { lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600" }],
+            h1: ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }]
+          }
+        }
+      }
+    };
+  </script>
   <style>
-    .role-chip {
-      display: inline-block;
-      padding: 0.1rem 0.5rem;
-      border-radius: 0.25rem;
-      background: var(--pico-secondary-background);
-      color: var(--pico-secondary-inverse);
-      font-size: 0.8rem;
-      text-decoration: none;
-      margin-right: 0.35rem;
-    }
-    .role-chip.active {
-      background: var(--pico-primary-background);
-      color: var(--pico-primary-inverse);
-    }
-    .role-chip.prio-1 {
-      background: #1f7a3a;
-      color: white;
-    }
-    .role-chip.prio-2 {
-      background: #5b6b75;
-      color: white;
-    }
-    .role-chip.prio-0 {
-      background: #7a1f1f;
-      color: white;
-    }
-    .job-card {
-      border: 1px solid var(--pico-muted-border-color);
-      border-radius: 0.5rem;
-      padding: 1rem;
-      margin-bottom: 0.75rem;
-    }
-    .job-meta {
-      color: var(--pico-muted-color);
-      font-size: 0.85rem;
-      margin-top: 0.25rem;
-    }
-    .job-actions button {
-      display: inline-block;
-      margin-right: 0.35rem;
-      padding: 0.25rem 0.75rem;
-      font-size: 0.85rem;
-    }
-    .job-actions .decision-form {
-      display: inline-block;
-      margin-right: 0.5rem;
-      vertical-align: top;
-    }
-    .job-actions .decision-trigger {
-      display: inline-block;
-      cursor: pointer;
-      padding: 0.4rem 1rem;
-      border-radius: 0.25rem;
-      font-size: 0.9rem;
-      font-weight: 500;
-      list-style: none;
-      user-select: none;
-    }
-    .job-actions .decision-trigger::-webkit-details-marker {
-      display: none;
-    }
-    .job-actions .accept-trigger {
-      background: var(--pico-primary-background);
-      color: var(--pico-primary-inverse);
-    }
-    .job-actions .dismiss-trigger {
-      background: var(--pico-secondary-background);
-      color: var(--pico-secondary-inverse);
-    }
-    .job-actions details[open] .decision-trigger {
-      margin-bottom: 0.25rem;
-    }
-    .decision-form-row {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-      margin-top: 0.4rem;
-      max-width: 100%;
-    }
-    .decision-form-row input[type="text"] {
-      flex: 1 1 auto;
-      min-width: 0;
-      margin: 0;
-      padding: 0.4rem 0.6rem;
-      font-size: 0.9rem;
-      height: auto;
-    }
-    .decision-form-row button {
-      flex: 0 0 auto;
-      width: auto;
-      margin: 0;
-      padding: 0.4rem 0.9rem;
-      font-size: 0.9rem;
-      height: auto;
-    }
-    .dropzone {
-      display: block;
-      border: 2px dashed var(--pico-muted-border-color);
-      border-radius: 0.5rem;
-      padding: 2rem 1rem;
-      text-align: center;
-      color: var(--pico-muted-color);
-      cursor: pointer;
-      margin-bottom: 1rem;
-      transition: border-color 0.15s ease;
-    }
-    .dropzone.dragging {
-      border-color: var(--pico-primary);
-      background: var(--pico-primary-background);
-      color: var(--pico-primary-inverse);
-    }
-    .training-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0.75rem;
-      margin-bottom: 0.75rem;
-    }
-    @media (max-width: 600px) {
-      .training-grid { grid-template-columns: 1fr; }
-    }
-    .job-reasoning {
-      margin-top: 0.5rem;
-      padding: 0.5rem 0.75rem;
-      background: var(--pico-code-background-color);
-      border-radius: 0.25rem;
-      font-size: 0.9rem;
-    }
-    .manual-review-banner {
-      background: var(--pico-mark-background-color);
-      color: var(--pico-mark-color);
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.25rem;
-      margin-bottom: 0.5rem;
-    }
+    body { font-family: "Inter", system-ui, sans-serif; }
+    .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24; }
+    .icon-fill { font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24; }
   </style>
 </head>
-<body>
-<main class="container">
-  <nav>
-    <ul>
-      <li><strong>twitter_jobs</strong></li>
-    </ul>
-    <ul>
-      <li><a href="/" {% if page == "dashboard" %}aria-current="page"{% endif %}>Dashboard</a></li>
-      <li><a href="/review" {% if page == "review" %}aria-current="page"{% endif %}>Review</a></li>
-      <li><a href="/all" {% if page == "all" %}aria-current="page"{% endif %}>All</a></li>
-      <li><a href="/training" {% if page == "training" %}aria-current="page"{% endif %}>Training</a></li>
-      <li><a href="/health">Health</a></li>
-    </ul>
+<body class="bg-background text-on-background antialiased min-h-screen">
+  <nav class="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-8 h-16 bg-surface-container-lowest border-b border-outline-variant/60 shadow-sm">
+    <div class="flex items-center gap-lg">
+      <a href="/" class="text-xl font-black text-primary-container">twitter_jobs</a>
+    </div>
+    <div class="hidden md:flex items-end h-full gap-lg text-sm font-medium">
+      <a href="/" class="pb-4 h-full flex items-end transition-colors {% if page == 'dashboard' %}text-primary border-b-2 border-primary{% else %}text-on-surface-variant hover:text-primary{% endif %}">Dashboard</a>
+      <a href="/review" class="pb-4 h-full flex items-end transition-colors {% if page == 'review' %}text-primary border-b-2 border-primary{% else %}text-on-surface-variant hover:text-primary{% endif %}">Review</a>
+      <a href="/all" class="pb-4 h-full flex items-end transition-colors {% if page == 'all' %}text-primary border-b-2 border-primary{% else %}text-on-surface-variant hover:text-primary{% endif %}">All History</a>
+      <a href="/training" class="pb-4 h-full flex items-end transition-colors {% if page == 'training' %}text-primary border-b-2 border-primary{% else %}text-on-surface-variant hover:text-primary{% endif %}">Training</a>
+      <a href="/health" class="pb-4 h-full flex items-end transition-colors text-on-surface-variant hover:text-primary">Health</a>
+    </div>
+    <div></div>
   </nav>
-  {% block content %}{% endblock %}
-</main>
+  <main class="pt-[80px] px-xl pb-xl max-w-container-max mx-auto min-h-screen flex flex-col gap-lg">
+    {% block content %}{% endblock %}
+  </main>
 </body>
 </html>

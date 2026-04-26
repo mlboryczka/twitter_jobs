@@ -1,64 +1,114 @@
-<article class="job-card" id="job-{{ job.tweet_id }}">
+{% set initial = (job.company or tweet.author.name or tweet.author.username or '?')[:1]|upper %}
+{% set p = priority_for(job.industry) %}
+<article id="job-{{ job.tweet_id }}" class="bg-surface-container-lowest border-2 border-outline-variant/40 rounded-xl p-lg shadow-sm hover:shadow-md transition-shadow flex flex-col gap-md">
   {% if job.needs_manual_review %}
-    <div class="manual-review-banner">
-      Manual review — {{ job.classifier_reasoning }}
+    <div class="flex items-center gap-xs px-sm py-xs rounded-lg bg-tertiary-fixed text-on-tertiary-container border border-tertiary-fixed-dim text-sm">
+      <span class="material-symbols-outlined text-base">warning</span>
+      <span>Manual review — {{ job.classifier_reasoning }}</span>
     </div>
   {% endif %}
 
-  <div>
-    {% if job.industry and industry_labels %}
-      {% set p = priority_for(job.industry) %}
-      <span class="role-chip {% if p == 1 %}prio-1{% elif p == 0 %}prio-0{% else %}prio-2{% endif %}">
-        {% if p == 1 %}P1{% elif p == 0 %}avoid{% else %}P2{% endif %} · {{ industry_labels.get(job.industry, job.industry) }}
-      </span>
-    {% endif %}
-    <span class="role-chip active">{{ role_labels.get(job.role_category, job.role_category) }}</span>
-    {% if job.seniority %}<span class="role-chip">{{ job.seniority }}</span>{% endif %}
-    {% if job.is_remote %}<span class="role-chip">remote</span>{% endif %}
-    {% if job.status and job.status != "new" %}<span class="role-chip">{{ job.status }}</span>{% endif %}
-    {% if job.company %}<strong>{{ job.company }}</strong>{% endif %}
-    {% if job.location %} — {{ job.location }}{% endif %}
+  <div class="flex items-start justify-between gap-md">
+    <div class="flex items-center gap-md min-w-0">
+      <div class="w-12 h-12 rounded-lg bg-primary-container flex items-center justify-center shadow-sm shrink-0">
+        <span class="text-h3 text-on-primary font-bold">{{ initial }}</span>
+      </div>
+      <div class="min-w-0">
+        <h2 class="text-h3 text-on-background truncate">
+          {% if job.company %}{{ job.company }}{% else %}{{ tweet.author.name or '@' ~ tweet.author.username }}{% endif %}
+        </h2>
+        <p class="text-body-md text-on-surface-variant flex items-center gap-xs mt-0.5">
+          <span class="material-symbols-outlined text-base">{% if job.is_remote %}public{% else %}location_on{% endif %}</span>
+          <span class="truncate">{{ job.location or ('Remote' if job.is_remote else 'Location not stated') }}</span>
+        </p>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-xs justify-end">
+      {% if job.industry and industry_labels %}
+        {% if p == 1 %}
+          <span class="text-label-sm uppercase tracking-wide font-bold px-sm py-xs rounded-full border bg-secondary-container/40 text-on-secondary-container border-secondary-container">P1 · {{ industry_labels.get(job.industry, job.industry) }}</span>
+        {% elif p == 0 %}
+          <span class="text-label-sm uppercase tracking-wide font-bold px-sm py-xs rounded-full border bg-error-container/40 text-on-error-container border-error-container">avoid · {{ industry_labels.get(job.industry, job.industry) }}</span>
+        {% else %}
+          <span class="text-label-sm uppercase tracking-wide font-bold px-sm py-xs rounded-full border bg-surface-container-high text-on-surface-variant border-outline-variant">P2 · {{ industry_labels.get(job.industry, job.industry) }}</span>
+        {% endif %}
+      {% endif %}
+      <span class="text-label-sm font-semibold px-sm py-xs rounded-full bg-primary-fixed text-on-primary-container border border-primary-fixed-dim">{{ role_labels.get(job.role_category, job.role_category) }}</span>
+      {% if job.seniority %}<span class="text-label-sm font-medium px-sm py-xs rounded-full bg-surface-container text-on-surface-variant border border-outline-variant">{{ job.seniority }}</span>{% endif %}
+      {% if job.is_remote %}<span class="text-label-sm font-medium px-sm py-xs rounded-full bg-surface-container text-on-surface-variant border border-outline-variant">remote</span>{% endif %}
+    </div>
   </div>
 
-  <p>{{ tweet.text }}</p>
+  <hr class="border-outline-variant/50">
 
-  <div class="job-meta">
-    @{{ tweet.author.username }} · {{ tweet.created_at.strftime("%Y-%m-%d %H:%M") }}
-    · <a href="https://x.com/{{ tweet.author.username }}/status/{{ tweet.tweet_id }}" target="_blank" rel="noopener">View on X</a>
-    {% if job.apply_link %} · <a href="{{ job.apply_link }}" target="_blank" rel="noopener">Apply</a>{% endif %}
+  <p class="text-body-lg text-on-surface leading-relaxed whitespace-pre-wrap">{{ tweet.text }}</p>
+
+  <div class="flex items-center justify-between gap-md flex-wrap">
+    <div class="flex items-center gap-sm text-body-md text-on-surface-variant">
+      <div class="w-8 h-8 rounded-full bg-surface-container-high text-primary flex items-center justify-center text-sm font-semibold">{{ tweet.author.username[:1]|upper }}</div>
+      <div class="flex flex-col">
+        <span class="font-medium text-on-background">{{ tweet.author.name or tweet.author.username }}</span>
+        <span class="text-xs text-outline">@{{ tweet.author.username }} · {{ tweet.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+      </div>
+      <a href="https://x.com/{{ tweet.author.username }}/status/{{ tweet.tweet_id }}" target="_blank" rel="noopener" class="ml-sm text-primary hover:underline text-sm flex items-center gap-xs">
+        <span class="material-symbols-outlined text-base">open_in_new</span>View on X
+      </a>
+      {% if job.apply_link %}
+        <a href="{{ job.apply_link }}" target="_blank" rel="noopener" class="text-primary hover:underline text-sm flex items-center gap-xs">
+          <span class="material-symbols-outlined text-base">link</span>Apply
+        </a>
+      {% endif %}
+    </div>
+
+    {% if job.status == "new" %}
+      <div class="flex items-center gap-sm">
+        <details class="relative">
+          <summary class="list-none cursor-pointer px-md py-sm rounded-lg font-label-md text-label-md border border-tertiary-fixed-dim bg-tertiary-fixed/50 text-on-tertiary-container hover:bg-tertiary-fixed transition-colors flex items-center gap-xs">
+            <span class="material-symbols-outlined text-base">close</span>Dismiss
+          </summary>
+          <form class="absolute right-0 mt-sm bg-surface-container-lowest border border-outline-variant rounded-lg shadow-lg p-sm w-80 z-10 flex flex-col gap-xs"
+                hx-post="/jobs/{{ job.tweet_id }}/dismiss"
+                hx-target="#job-{{ job.tweet_id }}"
+                hx-swap="outerHTML">
+            <textarea name="feedback" rows="2"
+                      class="w-full px-sm py-xs text-body-md border border-outline-variant rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="Why dismiss? (optional, helps the classifier learn)"></textarea>
+            <button type="submit" class="self-end px-md py-xs rounded-lg bg-tertiary-fixed text-on-tertiary-container font-label-md text-label-md border border-tertiary-fixed-dim hover:bg-tertiary-fixed-dim">Save</button>
+          </form>
+        </details>
+        <details class="relative">
+          <summary class="list-none cursor-pointer px-md py-sm rounded-lg font-label-md text-label-md bg-primary text-on-primary shadow-[0_2px_0_rgba(0,0,0,0.1)] hover:bg-primary/90 transition-colors flex items-center gap-xs">
+            <span class="material-symbols-outlined text-base">check</span>Accept
+          </summary>
+          <form class="absolute right-0 mt-sm bg-surface-container-lowest border border-outline-variant rounded-lg shadow-lg p-sm w-80 z-10 flex flex-col gap-xs"
+                hx-post="/jobs/{{ job.tweet_id }}/accept"
+                hx-target="#job-{{ job.tweet_id }}"
+                hx-swap="outerHTML">
+            <textarea name="feedback" rows="2"
+                      class="w-full px-sm py-xs text-body-md border border-outline-variant rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="Why is this a good fit? (optional, helps the classifier learn)"></textarea>
+            <button type="submit" class="self-end px-md py-xs rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90">Save</button>
+          </form>
+        </details>
+      </div>
+    {% else %}
+      <span class="text-label-sm font-medium px-sm py-xs rounded-full
+        {% if job.status == 'accepted' %}bg-secondary-container/40 text-on-secondary-container border border-secondary-container
+        {% else %}bg-error-container/40 text-on-error-container border border-error-container{% endif %}">
+        <span class="inline-block w-1.5 h-1.5 rounded-full mr-xs align-middle
+          {% if job.status == 'accepted' %}bg-secondary{% else %}bg-error{% endif %}"></span>
+        {{ job.status }}{% if job.user_feedback %} — {{ job.user_feedback }}{% endif %}
+      </span>
+    {% endif %}
   </div>
 
   {% if job.classifier_reasoning and not job.needs_manual_review %}
-    <details class="job-reasoning">
-      <summary>Classifier reasoning</summary>
-      <p>{{ job.classifier_reasoning }}</p>
+    <details class="bg-surface-container-low border border-outline-variant rounded-lg">
+      <summary class="cursor-pointer px-md py-sm text-sm text-on-surface-variant flex items-center justify-between hover:bg-surface-container">
+        <span class="flex items-center gap-xs"><span class="material-symbols-outlined text-base">psychology</span>Classifier reasoning</span>
+        <span class="material-symbols-outlined text-base">expand_more</span>
+      </summary>
+      <p class="px-md pb-md pt-xs text-body-md text-on-surface-variant">{{ job.classifier_reasoning }}</p>
     </details>
   {% endif %}
-
-  <div class="job-actions" style="margin-top:0.6rem;">
-    {% if job.status == "new" %}
-      <details class="decision-form">
-        <summary class="decision-trigger accept-trigger">Accept</summary>
-        <form class="decision-form-row"
-              hx-post="/jobs/{{ job.tweet_id }}/accept"
-              hx-target="#job-{{ job.tweet_id }}"
-              hx-swap="outerHTML">
-          <input type="text" name="feedback" placeholder="Why is this a good fit? (optional, helps the classifier learn)">
-          <button type="submit">Save</button>
-        </form>
-      </details>
-      <details class="decision-form">
-        <summary class="decision-trigger dismiss-trigger">Dismiss</summary>
-        <form class="decision-form-row"
-              hx-post="/jobs/{{ job.tweet_id }}/dismiss"
-              hx-target="#job-{{ job.tweet_id }}"
-              hx-swap="outerHTML">
-          <input type="text" name="feedback" placeholder="Why dismiss? (optional, helps the classifier learn)">
-          <button type="submit" class="contrast">Save</button>
-        </form>
-      </details>
-    {% else %}
-      <span class="role-chip">{{ job.status }}{% if job.user_feedback %} — {{ job.user_feedback }}{% endif %}</span>
-    {% endif %}
-  </div>
 </article>
