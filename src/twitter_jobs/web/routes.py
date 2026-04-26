@@ -11,6 +11,13 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
+from twitter_jobs.classify.industries import (
+    AVOID,
+    INDUSTRY_LABELS,
+    PRIORITY_1,
+    PRIORITY_2,
+    get_priority,
+)
 from twitter_jobs.db.models import ApiCall, JobPosting, Tweet, WorkerState
 from twitter_jobs.db.session import session_scope
 from twitter_jobs.ingest.feed_worker import LAST_PULL_SUMMARY_KEY
@@ -33,7 +40,13 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         return templates.TemplateResponse(
             request,
             "partials/job_row.html",
-            {"job": job, "tweet": tweet, "role_labels": ROLE_LABELS},
+            {
+                "job": job,
+                "tweet": tweet,
+                "role_labels": ROLE_LABELS,
+                "industry_labels": INDUSTRY_LABELS,
+                "priority_for": get_priority,
+            },
         )
 
     @router.get("/", response_class=HTMLResponse)
@@ -41,16 +54,24 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         request: Request,
         role: str | None = None,
         q: str | None = None,
+        priority: str | None = None,
         _: str = Depends(require_basic_auth),
     ) -> HTMLResponse:
         jobs = await _list_jobs(statuses=["new"], role=role, text_query=q)
+        # Sort: P1 industries first, then P2.
+        jobs.sort(key=lambda jt: get_priority(jt[0].industry))
+        if priority == "1":
+            jobs = [jt for jt in jobs if get_priority(jt[0].industry) == 1]
         return templates.TemplateResponse(
             request,
             "dashboard.html",
             {
                 "jobs": jobs,
                 "role_labels": ROLE_LABELS,
+                "industry_labels": INDUSTRY_LABELS,
+                "priority_for": get_priority,
                 "active_role": role,
+                "active_priority": priority,
                 "text_query": q or "",
                 "page": "dashboard",
             },
@@ -68,6 +89,8 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
             {
                 "jobs": jobs,
                 "role_labels": ROLE_LABELS,
+                "industry_labels": INDUSTRY_LABELS,
+                "priority_for": get_priority,
                 "page": "review",
             },
         )
@@ -83,13 +106,17 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         status_list = [s for s in (statuses or "").split(",") if s] or None
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         jobs = await _list_jobs(statuses=status_list, role=role, since=cutoff)
+        jobs.sort(key=lambda jt: get_priority(jt[0].industry))
         return templates.TemplateResponse(
             request,
             "dashboard.html",
             {
                 "jobs": jobs,
                 "role_labels": ROLE_LABELS,
+                "industry_labels": INDUSTRY_LABELS,
+                "priority_for": get_priority,
                 "active_role": role,
+                "active_priority": None,
                 "text_query": "",
                 "page": "all",
             },

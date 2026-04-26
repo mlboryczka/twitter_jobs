@@ -18,6 +18,13 @@ from typing import Any
 
 from anthropic import AsyncAnthropic
 
+from twitter_jobs.classify.industries import (
+    AVOID,
+    INDUSTRIES,
+    INDUSTRY_LABELS,
+    PRIORITY_1,
+    PRIORITY_2,
+)
 from twitter_jobs.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -36,6 +43,7 @@ TOOL_SCHEMA = {
         "required": [
             "is_target",
             "role_category",
+            "industry",
             "classifier_reasoning",
         ],
         "properties": {
@@ -69,6 +77,11 @@ TOOL_SCHEMA = {
                 "type": ["string", "null"],
                 "description": "Apply URL if present. If the only apply mechanism is 'DM me', this MUST be null.",
             },
+            "industry": {
+                "type": "string",
+                "enum": INDUSTRIES,
+                "description": "Industry/vertical of the hiring company. Use 'other' if it doesn't fit any defined bucket. Use the company name + tweet context to decide.",
+            },
             "classifier_reasoning": {
                 "type": "string",
                 "description": "One-to-three sentences explaining the decision. Quote specific phrases from the tweet when possible.",
@@ -95,6 +108,31 @@ Hard rules:
 - If the role is vaguely described but plausibly fits one of the five, pick your best bucket and note the uncertainty in reasoning.
 - For threads (multiple numbered replies), read the entire thread — the apply link and details are usually further down.
 - Prefer precision over recall. If you're not sure this is a hiring tweet in one of the five categories, is_target=false.
+
+Industry classification:
+You must always return an `industry` field, even when is_target=false. Pick the single best bucket from the enum based on the company's primary product/market. Use the company name + the tweet context. If genuinely unclassifiable, use 'other'.
+
+Bucket definitions:
+- fintech: payments, banking, insurance, lending, capital markets, accounting/finance ops software, neobanks
+- b2b_saas: horizontal enterprise software (CRM, HR, productivity, analytics) NOT focused on a single industry
+- ai_ml: foundation models, ML infra, AI tooling, AI-native applications where AI is the core product
+- dev_tools: developer infrastructure, observability, CI/CD, code-quality, internal-platform-as-product
+- vertical_tech: software/tech focused on a specific industry (legal-tech, real-estate-tech, restaurant-tech, etc.) — distinct from horizontal b2b_saas
+- consumer: D2C brands, consumer apps, social, dating
+- marketplaces: two-sided marketplaces (Airbnb, DoorDash patterns)
+- crypto: web3, blockchain, DeFi, crypto exchanges, NFTs, on-chain protocols
+- hardware: physical products, robotics, devices, hardware-first companies
+- agencies: consulting, services, agencies (NOT product companies)
+- healthcare: any healthcare/biotech/medical/wellness, INCLUDING health-tech SaaS
+- education: edtech, schools, training, tutoring
+- logistics: supply chain, freight, shipping, fulfillment
+- media: journalism, content, gaming, creator economy, entertainment
+- defense: defense, military, govtech, intelligence
+- cybersecurity: security products, infosec
+- climate: climate, energy, sustainability, carbon, clean tech
+- other: doesn't fit any of the above
+
+When the tweet doesn't name the company or product clearly, use 'other'. Don't guess wildly.
 
 Always call the record_classification tool exactly once with your answer.
 """
@@ -176,6 +214,7 @@ class JobClassification:
     is_remote: bool | None
     seniority: str | None
     apply_link: str | None
+    industry: str | None
     classifier_reasoning: str
 
 
@@ -334,6 +373,9 @@ def _parse_tool_input(data: dict[str, Any]) -> JobClassification:
     seniority = data.get("seniority")
     if seniority not in SENIORITIES and seniority is not None:
         seniority = "unknown"
+    industry = data.get("industry")
+    if industry not in INDUSTRIES:
+        industry = "other"
     return JobClassification(
         is_target=bool(data.get("is_target", False)),
         role_category=role,
@@ -342,5 +384,6 @@ def _parse_tool_input(data: dict[str, Any]) -> JobClassification:
         is_remote=data.get("is_remote"),
         seniority=seniority,
         apply_link=data.get("apply_link"),
+        industry=industry,
         classifier_reasoning=data.get("classifier_reasoning") or "",
     )

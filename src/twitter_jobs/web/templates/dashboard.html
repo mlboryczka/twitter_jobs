@@ -11,6 +11,12 @@
        href="{{ '/all?role=' + key if page == 'all' else '/?role=' + key }}">{{ label }}</a>
   {% endfor %}
 </p>
+{% if page != "all" %}
+<p>
+  <a class="role-chip {% if not active_priority %}active{% endif %}" href="/{% if active_role %}?role={{ active_role }}{% endif %}">All priorities</a>
+  <a class="role-chip prio-1 {% if active_priority == '1' %}active{% endif %}" href="/?priority=1{% if active_role %}&role={{ active_role }}{% endif %}">P1 only</a>
+</p>
+{% endif %}
 
 {% if page != "all" %}
 <form action="/" method="get">

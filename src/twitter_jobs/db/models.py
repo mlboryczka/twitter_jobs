@@ -157,6 +157,7 @@ class JobPosting(Base):
     is_remote: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     seniority: Mapped[str | None] = mapped_column(Text, nullable=True)
     apply_link: Mapped[str | None] = mapped_column(Text, nullable=True)
+    industry: Mapped[str | None] = mapped_column(Text, nullable=True)
     classifier_reasoning: Mapped[str] = mapped_column(Text, nullable=False, default="")
     needs_manual_review: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
@@ -189,4 +190,5 @@ class JobPosting(Base):
         ),
         Index("ix_job_postings_status_classified", "status", "classified_at"),
         Index("ix_job_postings_role_category", "role_category"),
+        Index("ix_job_postings_industry", "industry"),
     )

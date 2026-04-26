@@ -11,6 +11,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from twitter_jobs.classify.classifier import JobClassification, classify
+from twitter_jobs.classify.industries import is_avoided
 from twitter_jobs.classify.prefilter import (
     BIO_RECRUITER_PATTERNS,
     WEAK_HIRING_PATTERNS,
@@ -156,6 +157,7 @@ async def _classify_new(
                     is_remote=None,
                     seniority=None,
                     apply_link=None,
+                    industry="other",
                     classifier_reasoning="Flagged for manual review: media attached with short caption + hiring signal. Classifier can't see images.",
                 ),
                 needs_manual_review=True,
@@ -222,6 +224,17 @@ async def _insert_job_posting(
     classification: JobClassification,
     needs_manual_review: bool,
 ) -> None:
+    # Auto-dismiss postings in avoided industries — still inserted for
+    # transparency / re-classification later, but never hits the inbox.
+    if is_avoided(classification.industry):
+        status = "dismissed"
+        dismissal_reason = f"auto: avoided industry ({classification.industry})"
+        status_changed_at = datetime.utcnow()
+    else:
+        status = "new"
+        dismissal_reason = None
+        status_changed_at = None
+
     row = {
         "tweet_id": tweet_id,
         "role_category": classification.role_category,
@@ -230,8 +243,12 @@ async def _insert_job_posting(
         "is_remote": classification.is_remote,
         "seniority": classification.seniority,
         "apply_link": classification.apply_link,
+        "industry": classification.industry,
         "classifier_reasoning": classification.classifier_reasoning,
         "needs_manual_review": needs_manual_review,
+        "status": status,
+        "dismissal_reason": dismissal_reason,
+        "status_changed_at": status_changed_at,
     }
     async with session_scope() as session:
         await session.execute(

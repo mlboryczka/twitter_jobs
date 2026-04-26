@@ -6,6 +6,12 @@
   {% endif %}
 
   <div>
+    {% if job.industry and industry_labels %}
+      {% set p = priority_for(job.industry) %}
+      <span class="role-chip {% if p == 1 %}prio-1{% elif p == 0 %}prio-0{% else %}prio-2{% endif %}">
+        {% if p == 1 %}P1{% elif p == 0 %}avoid{% else %}P2{% endif %} · {{ industry_labels.get(job.industry, job.industry) }}
+      </span>
+    {% endif %}
     <span class="role-chip active">{{ role_labels.get(job.role_category, job.role_category) }}</span>
     {% if job.seniority %}<span class="role-chip">{{ job.seniority }}</span>{% endif %}
     {% if job.is_remote %}<span class="role-chip">remote</span>{% endif %}
