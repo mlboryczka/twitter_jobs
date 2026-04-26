@@ -19,6 +19,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert  # noqa: E402
 from sqlalchemy.orm import joinedload  # noqa: E402
 
 from twitter_jobs.classify.classifier import classify  # noqa: E402
+from twitter_jobs.classify.industries import is_avoided  # noqa: E402
 from twitter_jobs.classify.prefilter import is_potential_job  # noqa: E402
 from twitter_jobs.db.models import JobPosting, Tweet  # noqa: E402
 from twitter_jobs.db.session import session_scope  # noqa: E402
@@ -55,22 +56,61 @@ async def main(limit: int | None) -> None:
         if classification is None:
             continue
         async with session_scope() as session:
-            await session.execute(delete(JobPosting).where(JobPosting.tweet_id == t.tweet_id))
-            if classification.is_target:
+            if not classification.is_target:
+                # No longer a target — drop only if user hasn't triaged it.
+                from sqlalchemy import and_
                 await session.execute(
-                    pg_insert(JobPosting).values(
-                        tweet_id=t.tweet_id,
-                        role_category=classification.role_category,
-                        company=classification.company,
-                        location=classification.location,
-                        is_remote=classification.is_remote,
-                        seniority=classification.seniority,
-                        apply_link=classification.apply_link,
-                        classifier_reasoning=classification.classifier_reasoning,
-                        needs_manual_review=False,
+                    delete(JobPosting).where(
+                        and_(
+                            JobPosting.tweet_id == t.tweet_id,
+                            JobPosting.status == "new",
+                        )
                     )
                 )
-                reclassified += 1
+                continue
+
+            avoided = is_avoided(classification.industry)
+            insert_values = dict(
+                tweet_id=t.tweet_id,
+                role_category=classification.role_category,
+                company=classification.company,
+                location=classification.location,
+                is_remote=classification.is_remote,
+                seniority=classification.seniority,
+                apply_link=classification.apply_link,
+                industry=classification.industry,
+                classifier_reasoning=classification.classifier_reasoning,
+                needs_manual_review=False,
+            )
+            if avoided:
+                # Newly classified into an avoided industry — auto-dismiss.
+                from datetime import datetime, timezone
+                insert_values["status"] = "dismissed"
+                insert_values["dismissal_reason"] = (
+                    f"auto: avoided industry ({classification.industry})"
+                )
+                insert_values["status_changed_at"] = datetime.now(timezone.utc)
+
+            stmt = pg_insert(JobPosting).values(**insert_values)
+            # Update only classifier-derived fields on conflict; preserve the
+            # user's status, dismissal_reason, status_changed_at, user_feedback.
+            update_set = {
+                "role_category": stmt.excluded.role_category,
+                "company": stmt.excluded.company,
+                "location": stmt.excluded.location,
+                "is_remote": stmt.excluded.is_remote,
+                "seniority": stmt.excluded.seniority,
+                "apply_link": stmt.excluded.apply_link,
+                "industry": stmt.excluded.industry,
+                "classifier_reasoning": stmt.excluded.classifier_reasoning,
+                "needs_manual_review": stmt.excluded.needs_manual_review,
+            }
+            stmt = stmt.on_conflict_do_update(
+                index_elements=[JobPosting.tweet_id],
+                set_=update_set,
+            )
+            await session.execute(stmt)
+            reclassified += 1
     logger.info("reclassified %d tweets as target", reclassified)
 
 
