@@ -39,21 +39,21 @@
     {% if job.status == "new" %}
       <details class="decision-form">
         <summary class="decision-trigger accept-trigger">Accept</summary>
-        <form hx-post="/jobs/{{ job.tweet_id }}/accept"
+        <form class="decision-form-row"
+              hx-post="/jobs/{{ job.tweet_id }}/accept"
               hx-target="#job-{{ job.tweet_id }}"
-              hx-swap="outerHTML"
-              style="display:flex; gap:0.4rem; margin-top:0.4rem;">
-          <input type="text" name="feedback" placeholder="Why is this a good fit? (optional, helps the classifier learn)" style="flex:1;">
+              hx-swap="outerHTML">
+          <input type="text" name="feedback" placeholder="Why is this a good fit? (optional, helps the classifier learn)">
           <button type="submit">Save</button>
         </form>
       </details>
       <details class="decision-form">
         <summary class="decision-trigger dismiss-trigger">Dismiss</summary>
-        <form hx-post="/jobs/{{ job.tweet_id }}/dismiss"
+        <form class="decision-form-row"
+              hx-post="/jobs/{{ job.tweet_id }}/dismiss"
               hx-target="#job-{{ job.tweet_id }}"
-              hx-swap="outerHTML"
-              style="display:flex; gap:0.4rem; margin-top:0.4rem;">
-          <input type="text" name="feedback" placeholder="Why dismiss? (optional, helps the classifier learn)" style="flex:1;">
+              hx-swap="outerHTML">
+          <input type="text" name="feedback" placeholder="Why dismiss? (optional, helps the classifier learn)">
           <button type="submit" class="contrast">Save</button>
         </form>
       </details>
