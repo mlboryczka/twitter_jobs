@@ -15,7 +15,7 @@ Single-user by design. Runs 24/7 on a small VPS.
 - APScheduler (in-process)
 - PostgreSQL 16 + SQLAlchemy 2.0 (async) + Alembic
 - X API v2 via OAuth 2.0 PKCE, scopes `tweet.read users.read bookmark.read offline.access`
-- Anthropic SDK, `claude-haiku-4-5` with tool-use structured output
+- Anthropic SDK, `claude-sonnet-4-6` with tool-use structured output
 - systemd + Caddy on Ubuntu 24.04
 
 ## Bootstrap (VPS)

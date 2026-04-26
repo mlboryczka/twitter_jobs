@@ -5,8 +5,9 @@ system prompt. The model calls a single tool, ``record_classification``, whose
 schema defines every field on job_postings. We accept only the first tool call;
 if the model refuses or returns no tool call, we treat it as not-a-target.
 
-The model is ``claude-haiku-4-5`` (Claude 4 Haiku). Cheap enough to run on every
-prefilter hit.
+The model is ``claude-sonnet-4-6`` (Claude 4 Sonnet). Better at nuanced
+judgment than Haiku — matters for borderline "is this a hiring tweet in one
+of the five categories" calls — without the cost of Opus.
 """
 
 from __future__ import annotations
@@ -29,7 +30,7 @@ from twitter_jobs.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-MODEL = "claude-haiku-4-5"
+MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 1024
 
 ROLE_CATEGORIES = ["corp_dev", "strategy", "bd", "ops", "cos", "unknown"]
