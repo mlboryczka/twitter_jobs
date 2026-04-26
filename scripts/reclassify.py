@@ -10,6 +10,7 @@ import argparse
 import asyncio
 import logging
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -28,7 +29,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message
 logger = logging.getLogger("reclassify")
 
 
-async def main(limit: int | None) -> None:
+async def main(limit: int | None, throttle: float, skip_classified: bool) -> None:
     async with session_scope() as session:
         q = select(Tweet).options(joinedload(Tweet.author)).order_by(Tweet.created_at.desc())
         if limit:
@@ -37,8 +38,21 @@ async def main(limit: int | None) -> None:
 
     logger.info("loaded %d tweets from DB", len(tweets))
 
+    already_classified: set[str] = set()
+    if skip_classified:
+        from sqlalchemy import select
+        from twitter_jobs.db.models import JobPosting
+        async with session_scope() as session:
+            res = await session.execute(
+                select(JobPosting.tweet_id).where(JobPosting.industry.isnot(None))
+            )
+            already_classified = {tid for (tid,) in res.all()}
+        logger.info("skipping %d tweets that already have an industry", len(already_classified))
+
     hits = []
     for t in tweets:
+        if t.tweet_id in already_classified:
+            continue
         raw = dict(t.raw_json or {})
         raw.setdefault("id", t.tweet_id)
         raw.setdefault("text", t.text)
@@ -48,10 +62,16 @@ async def main(limit: int | None) -> None:
         if result.hit:
             hits.append((t, raw, author))
 
-    logger.info("prefilter hits: %d", len(hits))
+    logger.info("prefilter hits: %d (throttle=%.2fs/call)", len(hits), throttle)
 
     reclassified = 0
+    last_call = 0.0
     for i, (t, raw, author) in enumerate(hits, 1):
+        # Spread calls so we don't constantly bounce off Anthropic rate limits.
+        elapsed = time.monotonic() - last_call
+        if elapsed < throttle:
+            await asyncio.sleep(throttle - elapsed)
+        last_call = time.monotonic()
         classification = await classify(raw, author, [raw])
         if classification is None:
             logger.info("[%d/%d] classifier returned None — skipping", i, len(hits))
@@ -137,5 +157,7 @@ def _author_dict(tweet: Tweet) -> dict:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=None, help="max tweets to consider (most recent first)")
+    ap.add_argument("--throttle", type=float, default=1.5, help="min seconds between classifier calls (default 1.5 = ~40/min, safe under Anthropic free-tier limits)")
+    ap.add_argument("--skip-classified", action="store_true", help="skip tweets that already have an industry tagged")
     args = ap.parse_args()
-    asyncio.run(main(limit=args.limit))
+    asyncio.run(main(limit=args.limit, throttle=args.throttle, skip_classified=args.skip_classified))
