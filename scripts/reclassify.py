@@ -40,7 +40,6 @@ async def main(limit: int | None, throttle: float, skip_classified: bool) -> Non
 
     already_classified: set[str] = set()
     if skip_classified:
-        from twitter_jobs.db.models import JobPosting
         async with session_scope() as session:
             res = await session.execute(
                 select(JobPosting.tweet_id).where(JobPosting.industry.isnot(None))
