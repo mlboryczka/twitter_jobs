@@ -158,6 +158,7 @@ async def _classify_new(
                     seniority=None,
                     apply_link=None,
                     industry="other",
+                    is_us_eligible=None,
                     classifier_reasoning="Flagged for manual review: media attached with short caption + hiring signal. Classifier can't see images.",
                 ),
                 needs_manual_review=True,
@@ -224,11 +225,17 @@ async def _insert_job_posting(
     classification: JobClassification,
     needs_manual_review: bool,
 ) -> None:
-    # Auto-dismiss postings in avoided industries — still inserted for
-    # transparency / re-classification later, but never hits the inbox.
+    # Auto-dismiss in two cases — still inserted for transparency / later
+    # re-classification, but never hits the inbox.
     if is_avoided(classification.industry):
         status = "dismissed"
         dismissal_reason = f"auto: avoided industry ({classification.industry})"
+        status_changed_at = datetime.utcnow()
+    elif classification.is_us_eligible is False:
+        status = "dismissed"
+        dismissal_reason = (
+            f"auto: not US-eligible (location: {classification.location or 'unspecified'})"
+        )
         status_changed_at = datetime.utcnow()
     else:
         status = "new"
@@ -244,6 +251,7 @@ async def _insert_job_posting(
         "seniority": classification.seniority,
         "apply_link": classification.apply_link,
         "industry": classification.industry,
+        "is_us_eligible": classification.is_us_eligible,
         "classifier_reasoning": classification.classifier_reasoning,
         "needs_manual_review": needs_manual_review,
         "status": status,

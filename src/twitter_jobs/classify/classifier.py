@@ -44,6 +44,7 @@ TOOL_SCHEMA = {
             "is_target",
             "role_category",
             "industry",
+            "is_us_eligible",
             "classifier_reasoning",
         ],
         "properties": {
@@ -81,6 +82,10 @@ TOOL_SCHEMA = {
                 "type": "string",
                 "enum": INDUSTRIES,
                 "description": "Industry/vertical of the hiring company. Use 'other' if it doesn't fit any defined bucket. Use the company name + tweet context to decide.",
+            },
+            "is_us_eligible": {
+                "type": "boolean",
+                "description": "True UNLESS the tweet explicitly restricts the role to a non-US location. If location is unspecified → True. If remote with no geographic restriction → True. If US/SF/NYC/Remote-US → True. If 'Bangalore only', 'London hybrid', 'Remote, EU only', 'Berlin in-person' → False.",
             },
             "classifier_reasoning": {
                 "type": "string",
@@ -133,6 +138,15 @@ Bucket definitions:
 - other: doesn't fit any of the above
 
 When the tweet doesn't name the company or product clearly, use 'other'. Don't guess wildly.
+
+Location eligibility (is_us_eligible):
+The user is US-based. Set is_us_eligible=False ONLY when the tweet makes the role unavailable to a US-based applicant — explicit non-US-only locations like "Bangalore only", "London (hybrid)", "Berlin in-person", "Remote — EU only", "Singapore HQ".
+Set is_us_eligible=True when:
+- US locations (NYC, SF, Austin, "Remote-US", "US-based", etc.)
+- Remote with no geographic restriction
+- Hybrid in a US city
+- Location is not stated at all (default — don't guess)
+- Multi-location postings that include any US option
 
 Always call the record_classification tool exactly once with your answer.
 """
@@ -215,6 +229,7 @@ class JobClassification:
     seniority: str | None
     apply_link: str | None
     industry: str | None
+    is_us_eligible: bool | None
     classifier_reasoning: str
 
 
@@ -376,6 +391,9 @@ def _parse_tool_input(data: dict[str, Any]) -> JobClassification:
     industry = data.get("industry")
     if industry not in INDUSTRIES:
         industry = "other"
+    is_us_eligible = data.get("is_us_eligible")
+    if is_us_eligible is not None:
+        is_us_eligible = bool(is_us_eligible)
     return JobClassification(
         is_target=bool(data.get("is_target", False)),
         role_category=role,
@@ -385,5 +403,6 @@ def _parse_tool_input(data: dict[str, Any]) -> JobClassification:
         seniority=seniority,
         apply_link=data.get("apply_link"),
         industry=industry,
+        is_us_eligible=is_us_eligible,
         classifier_reasoning=data.get("classifier_reasoning") or "",
     )

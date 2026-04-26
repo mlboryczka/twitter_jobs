@@ -158,6 +158,7 @@ class JobPosting(Base):
     seniority: Mapped[str | None] = mapped_column(Text, nullable=True)
     apply_link: Mapped[str | None] = mapped_column(Text, nullable=True)
     industry: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_us_eligible: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     classifier_reasoning: Mapped[str] = mapped_column(Text, nullable=False, default="")
     needs_manual_review: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False

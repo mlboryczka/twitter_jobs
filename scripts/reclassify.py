@@ -97,6 +97,7 @@ async def main(limit: int | None, throttle: float, skip_classified: bool) -> Non
                 continue
 
             avoided = is_avoided(classification.industry)
+            us_blocked = classification.is_us_eligible is False
             insert_values = dict(
                 tweet_id=t.tweet_id,
                 role_category=classification.role_category,
@@ -106,16 +107,21 @@ async def main(limit: int | None, throttle: float, skip_classified: bool) -> Non
                 seniority=classification.seniority,
                 apply_link=classification.apply_link,
                 industry=classification.industry,
+                is_us_eligible=classification.is_us_eligible,
                 classifier_reasoning=classification.classifier_reasoning,
                 needs_manual_review=False,
             )
-            if avoided:
-                # Newly classified into an avoided industry — auto-dismiss.
+            if avoided or us_blocked:
                 from datetime import datetime, timezone
                 insert_values["status"] = "dismissed"
-                insert_values["dismissal_reason"] = (
-                    f"auto: avoided industry ({classification.industry})"
-                )
+                if avoided:
+                    insert_values["dismissal_reason"] = (
+                        f"auto: avoided industry ({classification.industry})"
+                    )
+                else:
+                    insert_values["dismissal_reason"] = (
+                        f"auto: not US-eligible (location: {classification.location or 'unspecified'})"
+                    )
                 insert_values["status_changed_at"] = datetime.now(timezone.utc)
 
             stmt = pg_insert(JobPosting).values(**insert_values)
@@ -129,6 +135,7 @@ async def main(limit: int | None, throttle: float, skip_classified: bool) -> Non
                 "seniority": stmt.excluded.seniority,
                 "apply_link": stmt.excluded.apply_link,
                 "industry": stmt.excluded.industry,
+                "is_us_eligible": stmt.excluded.is_us_eligible,
                 "classifier_reasoning": stmt.excluded.classifier_reasoning,
                 "needs_manual_review": stmt.excluded.needs_manual_review,
             }
