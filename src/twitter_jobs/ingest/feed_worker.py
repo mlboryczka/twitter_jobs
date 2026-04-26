@@ -31,13 +31,78 @@ FEED_SINCE_ID_KEY = "feed_since_id"
 LAST_PULL_SUMMARY_KEY = "feed_last_pull_summary"
 MAX_PAGES_PER_RUN = 10
 IMAGE_SHORT_TEXT_THRESHOLD = 140  # chars
-MIN_AUTHOR_FOLLOWERS = 200  # spam threshold — accounts below this auto-dismiss
+
+# --- spam thresholds ---
+MIN_AUTHOR_FOLLOWERS = 200          # below this we dismiss unless verified
+MIN_FOLLOWER_TO_FOLLOWING_RATIO = 0.1  # follow-back-farmer floor
+MIN_FOLLOWING_FOR_RATIO_CHECK = 500    # only apply ratio check if follows ≥ this
+
+import re
+
+# Bio patterns that indicate the author is almost certainly not posting a real
+# job. Conservative list — we're filtering for blatant cases only.
+SPAM_BIO_PATTERNS = [
+    re.compile(p, re.IGNORECASE)
+    for p in [
+        r"\$\$\$+",
+        r"\bcrypto signals?\b",
+        r"\bget rich\b",
+        r"\bmake money (?:fast|online)\b",
+        r"\bearn \$\d",
+        r"\bfollow.?(?:4|for).?follow\b",
+        r"\bfollow.?back\b",
+        r"\bdm (?:for|me for) (?:signals?|leads?|airdrops?|free)\b",
+        r"\btelegram\.me/",
+        r"\bonlyfans\b",
+        r"\b18\+\b",
+    ]
+]
 
 
 def _author_followers_count(author: dict[str, Any]) -> int | None:
     metrics = author.get("public_metrics") or {}
     val = metrics.get("followers_count")
     return int(val) if val is not None else None
+
+
+def spam_dismiss_reason(author: dict[str, Any]) -> str | None:
+    """Return a dismissal reason if the author looks like spam, else None.
+
+    Order matters: we check the most precise signals first so the reason
+    string is informative.
+    """
+    metrics = author.get("public_metrics") or {}
+    followers = metrics.get("followers_count")
+    following = metrics.get("following_count")
+    verified = bool(author.get("verified", False))
+    bio = (author.get("description") or "")
+
+    # Bio red flags — apply unconditionally; verified doesn't excuse "DM for signals".
+    for pat in SPAM_BIO_PATTERNS:
+        m = pat.search(bio)
+        if m:
+            return f"auto: spam bio pattern ({m.group(0)!r})"
+
+    # Verified accounts bypass the count-based heuristics — X verifies real people / orgs.
+    if verified:
+        return None
+
+    # Follow-back farmer ratio.
+    if (
+        isinstance(followers, int)
+        and isinstance(following, int)
+        and following >= MIN_FOLLOWING_FOR_RATIO_CHECK
+        and followers < following * MIN_FOLLOWER_TO_FOLLOWING_RATIO
+    ):
+        return (
+            f"auto: follow-back farmer (follows {following}, only {followers} follow back)"
+        )
+
+    # Low-follower threshold.
+    if isinstance(followers, int) and followers < MIN_AUTHOR_FOLLOWERS:
+        return f"auto: low follower count ({followers} < {MIN_AUTHOR_FOLLOWERS})"
+
+    return None
 
 
 async def run_feed_pull() -> dict[str, Any]:
@@ -152,7 +217,7 @@ async def _classify_new(
             continue
         author = users_by_id.get(t.get("author_id", ""), {}) or {}
 
-        followers = _author_followers_count(author)
+        spam_reason = spam_dismiss_reason(author)
 
         # --- image flagging: skip classifier, push to manual review ---
         if _should_flag_as_image(t, author, ref_tweets_by_id):
@@ -171,7 +236,7 @@ async def _classify_new(
                     classifier_reasoning="Flagged for manual review: media attached with short caption + hiring signal. Classifier can't see images.",
                 ),
                 needs_manual_review=True,
-                author_followers=followers,
+                spam_reason=spam_reason,
             )
             manual_inserted += 1
             continue
@@ -195,7 +260,7 @@ async def _classify_new(
             tweet_id=t["id"],
             classification=classification,
             needs_manual_review=False,
-            author_followers=followers,
+            spam_reason=spam_reason,
         )
         jobs_inserted += 1
 
@@ -235,7 +300,7 @@ async def _insert_job_posting(
     tweet_id: str,
     classification: JobClassification,
     needs_manual_review: bool,
-    author_followers: int | None = None,
+    spam_reason: str | None = None,
 ) -> None:
     # Auto-dismiss in three cases — still inserted for transparency / later
     # re-classification, but never hits the inbox.
@@ -249,13 +314,9 @@ async def _insert_job_posting(
             f"auto: not US-eligible (location: {classification.location or 'unspecified'})"
         )
         status_changed_at = datetime.utcnow()
-    elif (
-        author_followers is not None and author_followers < MIN_AUTHOR_FOLLOWERS
-    ):
+    elif spam_reason:
         status = "dismissed"
-        dismissal_reason = (
-            f"auto: low follower count ({author_followers} < {MIN_AUTHOR_FOLLOWERS})"
-        )
+        dismissal_reason = spam_reason
         status_changed_at = datetime.utcnow()
     else:
         status = "new"

@@ -25,8 +25,7 @@ from twitter_jobs.classify.prefilter import is_potential_job  # noqa: E402
 from twitter_jobs.db.models import JobPosting, Tweet  # noqa: E402
 from twitter_jobs.db.session import session_scope  # noqa: E402
 from twitter_jobs.ingest.feed_worker import (  # noqa: E402
-    MIN_AUTHOR_FOLLOWERS,
-    _author_followers_count,
+    spam_dismiss_reason,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
@@ -100,10 +99,7 @@ async def main(limit: int | None, throttle: float, skip_classified: bool) -> Non
 
             avoided = is_avoided(classification.industry)
             us_blocked = classification.is_us_eligible is False
-            followers = _author_followers_count(author)
-            low_followers = (
-                followers is not None and followers < MIN_AUTHOR_FOLLOWERS
-            )
+            spam_reason = spam_dismiss_reason(author)
             insert_values = dict(
                 tweet_id=t.tweet_id,
                 role_category=classification.role_category,
@@ -117,7 +113,7 @@ async def main(limit: int | None, throttle: float, skip_classified: bool) -> Non
                 classifier_reasoning=classification.classifier_reasoning,
                 needs_manual_review=False,
             )
-            if avoided or us_blocked or low_followers:
+            if avoided or us_blocked or spam_reason:
                 from datetime import datetime, timezone
                 insert_values["status"] = "dismissed"
                 if avoided:
@@ -129,9 +125,7 @@ async def main(limit: int | None, throttle: float, skip_classified: bool) -> Non
                         f"auto: not US-eligible (location: {classification.location or 'unspecified'})"
                     )
                 else:
-                    insert_values["dismissal_reason"] = (
-                        f"auto: low follower count ({followers} < {MIN_AUTHOR_FOLLOWERS})"
-                    )
+                    insert_values["dismissal_reason"] = spam_reason
                 insert_values["status_changed_at"] = datetime.now(timezone.utc)
 
             stmt = pg_insert(JobPosting).values(**insert_values)
@@ -158,7 +152,7 @@ async def main(limit: int | None, throttle: float, skip_classified: bool) -> Non
             # If this row's classification now puts it in an avoided bucket,
             # flip status to 'dismissed' — but only if the user hasn't
             # already triaged it manually.
-            if avoided or us_blocked or low_followers:
+            if avoided or us_blocked or spam_reason:
                 from datetime import datetime, timezone
                 from sqlalchemy import update as sa_update
                 if avoided:
@@ -166,7 +160,7 @@ async def main(limit: int | None, throttle: float, skip_classified: bool) -> Non
                 elif us_blocked:
                     reason = f"auto: not US-eligible (location: {classification.location or 'unspecified'})"
                 else:
-                    reason = f"auto: low follower count ({followers} < {MIN_AUTHOR_FOLLOWERS})"
+                    reason = spam_reason
                 await session.execute(
                     sa_update(JobPosting)
                     .where(
