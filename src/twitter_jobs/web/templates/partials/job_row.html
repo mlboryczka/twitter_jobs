@@ -75,12 +75,27 @@
             </form>
           </details>
         </div>
+      {% elif job.status == "accepted" %}
+        <div class="flex items-center gap-xs">
+          <form hx-post="/jobs/{{ job.tweet_id }}/dismiss" hx-target="#job-{{ job.tweet_id }}" hx-swap="outerHTML">
+            <input type="hidden" name="feedback" value="changed mind after accepting">
+            <button type="submit" class="px-md py-sm rounded-lg text-label-md font-medium border border-tertiary-fixed-dim bg-tertiary-fixed/50 text-on-tertiary-container hover:bg-tertiary-fixed transition-colors flex items-center gap-xs">
+              <span class="material-symbols-outlined text-base">close</span>Dismiss
+            </button>
+          </form>
+          <form hx-post="/jobs/{{ job.tweet_id }}/applied" hx-target="#job-{{ job.tweet_id }}" hx-swap="outerHTML">
+            <input type="hidden" name="feedback" value="">
+            <button type="submit" class="px-md py-sm rounded-lg text-label-md font-medium bg-secondary text-on-secondary hover:bg-secondary/90 transition-colors flex items-center gap-xs">
+              <span class="material-symbols-outlined text-base">task_alt</span>Applied
+            </button>
+          </form>
+        </div>
       {% else %}
         <span class="text-label-sm font-medium px-sm py-xs rounded-full
-          {% if job.status == 'accepted' %}bg-secondary-container/40 text-on-secondary-container border border-secondary-container
+          {% if job.status == 'applied' %}bg-secondary-container/40 text-on-secondary-container border border-secondary-container
           {% else %}bg-error-container/40 text-on-error-container border border-error-container{% endif %}">
           <span class="inline-block w-1.5 h-1.5 rounded-full mr-xs align-middle
-            {% if job.status == 'accepted' %}bg-secondary{% else %}bg-error{% endif %}"></span>
+            {% if job.status == 'applied' %}bg-secondary{% else %}bg-error{% endif %}"></span>
           {{ job.status }}{% if job.user_feedback %} — {{ job.user_feedback }}{% endif %}
         </span>
       {% endif %}

@@ -63,10 +63,6 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         priority: str | None = None,
         _: str = Depends(require_basic_auth),
     ) -> HTMLResponse:
-        jobs = await _list_jobs(statuses=["new"], role=role, text_query=q)
-        # Defensive: even if a row's status='new' wasn't flipped to 'dismissed'
-        # at insert/reclassify time, never surface AVOID industries,
-        # non-US-eligible postings, or anything spam_dismiss_reason flags.
         from twitter_jobs.ingest.feed_worker import spam_dismiss_reason
 
         def _author_dict(tweet: Tweet) -> dict[str, Any]:
@@ -79,21 +75,30 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
                 "public_metrics": a.public_metrics,
             }
 
-        jobs = [
-            jt for jt in jobs
+        # Section 1: status='new' inbox (only items still needing triage).
+        inbox = await _list_jobs(statuses=["new"], role=role, text_query=q)
+        # Defensive: never surface AVOID industries, non-US-eligible postings,
+        # or anything spam_dismiss_reason flags — even if upstream missed it.
+        inbox = [
+            jt for jt in inbox
             if get_priority(jt[0].industry) != 0
             and jt[0].is_us_eligible is not False
             and spam_dismiss_reason(_author_dict(jt[1])) is None
         ]
-        # Sort: P1 industries first, then P2.
-        jobs.sort(key=lambda jt: get_priority(jt[0].industry))
+        inbox.sort(key=lambda jt: get_priority(jt[0].industry))
         if priority == "1":
-            jobs = [jt for jt in jobs if get_priority(jt[0].industry) == 1]
+            inbox = [jt for jt in inbox if get_priority(jt[0].industry) == 1]
+
+        # Section 2: status='accepted' — accepted-but-not-yet-applied.
+        to_apply = await _list_jobs(statuses=["accepted"], role=role, text_query=q)
+        to_apply.sort(key=lambda jt: get_priority(jt[0].industry))
+
         return templates.TemplateResponse(
             request,
             "dashboard.html",
             {
-                "jobs": jobs,
+                "inbox": inbox,
+                "to_apply": to_apply,
                 "role_labels": ROLE_LABELS,
                 "industry_labels": INDUSTRY_LABELS,
                 "priority_for": get_priority,
@@ -188,6 +193,15 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         _: str = Depends(require_basic_auth),
     ) -> HTMLResponse:
         return await _record_decision(tweet_id, request, "dismissed", feedback)
+
+    @router.post("/jobs/{tweet_id}/applied", response_class=HTMLResponse)
+    async def applied(
+        tweet_id: str,
+        request: Request,
+        feedback: str = Form(""),
+        _: str = Depends(require_basic_auth),
+    ) -> HTMLResponse:
+        return await _record_decision(tweet_id, request, "applied", feedback)
 
     @router.get("/training", response_class=HTMLResponse)
     async def training_page(

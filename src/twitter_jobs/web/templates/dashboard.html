@@ -1,57 +1,72 @@
 {% extends "base.html" %}
-{% block title %}{% if page == "all" %}All jobs{% else %}Triage Inbox{% endif %} — twitter_jobs{% endblock %}
+{% block title %}Triage Inbox — twitter_jobs{% endblock %}
 
 {% block content %}
-<header class="flex flex-col gap-md">
+<header class="flex flex-col gap-md max-w-[820px]">
   <div>
-    <h1 class="text-h1 text-on-background">{% if page == "all" %}All jobs{% else %}Triage Inbox{% endif %}</h1>
+    <h1 class="text-h1 text-on-background">Dashboard</h1>
     <p class="text-body-md text-on-surface-variant mt-xs">
-      {% if page == "all" %}
-        Every classified job, including ones auto-dismissed by the filters.
-      {% else %}
-        New jobs the classifier surfaced. Accept or dismiss to train the model.
-      {% endif %}
+      Triage new jobs and track the ones you've accepted but haven't applied to yet.
     </p>
   </div>
 
   <div class="flex flex-wrap items-center gap-xs">
-    <a href="{{ '/all' if page == 'all' else '/' }}"
-       class="px-md py-xs rounded-full text-label-md font-medium border transition-colors {% if not active_role %}bg-on-background text-background border-on-background{% else %}bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low{% endif %}">All roles</a>
+    <a href="/" class="px-md py-xs rounded-full text-label-md font-medium border transition-colors {% if not active_role %}bg-on-background text-background border-on-background{% else %}bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low{% endif %}">All roles</a>
     {% for key, label in role_labels.items() %}
-      <a href="{{ '/all?role=' ~ key if page == 'all' else '/?role=' ~ key }}"
-         class="px-md py-xs rounded-full text-label-md font-medium border transition-colors {% if active_role == key %}bg-on-background text-background border-on-background{% else %}bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low{% endif %}">{{ label }}</a>
+      <a href="/?role={{ key }}" class="px-md py-xs rounded-full text-label-md font-medium border transition-colors {% if active_role == key %}bg-on-background text-background border-on-background{% else %}bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low{% endif %}">{{ label }}</a>
     {% endfor %}
   </div>
 
-  {% if page != "all" %}
-    <div class="flex flex-wrap items-center gap-xs">
-      <a href="/{% if active_role %}?role={{ active_role }}{% endif %}"
-         class="px-md py-xs rounded-full text-label-md font-medium border transition-colors {% if not active_priority %}bg-on-background text-background border-on-background{% else %}bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low{% endif %}">All priorities</a>
-      <a href="/?priority=1{% if active_role %}&role={{ active_role }}{% endif %}"
-         class="px-md py-xs rounded-full text-label-md font-bold border transition-colors {% if active_priority == '1' %}bg-secondary-container text-on-secondary-container border-secondary-container{% else %}bg-secondary-container/30 text-on-secondary-container border-secondary-container/60 hover:bg-secondary-container/60{% endif %}">P1 only</a>
-    </div>
+  <div class="flex flex-wrap items-center gap-xs">
+    <a href="/{% if active_role %}?role={{ active_role }}{% endif %}" class="px-md py-xs rounded-full text-label-md font-medium border transition-colors {% if not active_priority %}bg-on-background text-background border-on-background{% else %}bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low{% endif %}">All priorities</a>
+    <a href="/?priority=1{% if active_role %}&role={{ active_role }}{% endif %}" class="px-md py-xs rounded-full text-label-md font-bold border transition-colors {% if active_priority == '1' %}bg-secondary-container text-on-secondary-container border-secondary-container{% else %}bg-secondary-container/30 text-on-secondary-container border-secondary-container/60 hover:bg-secondary-container/60{% endif %}">P1 only</a>
+  </div>
 
-    <form action="/" method="get" class="relative max-w-xl">
-      <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">search</span>
-      <input type="search" name="q" value="{{ text_query }}"
-             placeholder="Search company, location, tweet text…"
-             class="w-full pl-12 pr-md py-sm bg-surface-container-low border border-outline-variant rounded-full text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-      {% if active_role %}<input type="hidden" name="role" value="{{ active_role }}">{% endif %}
-      {% if active_priority %}<input type="hidden" name="priority" value="{{ active_priority }}">{% endif %}
-    </form>
-  {% endif %}
+  <form action="/" method="get" class="relative">
+    <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">search</span>
+    <input type="search" name="q" value="{{ text_query }}"
+           placeholder="Search company, location, tweet text…"
+           class="w-full pl-12 pr-md py-sm bg-surface-container-low border border-outline-variant rounded-full text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+    {% if active_role %}<input type="hidden" name="role" value="{{ active_role }}">{% endif %}
+    {% if active_priority %}<input type="hidden" name="priority" value="{{ active_priority }}">{% endif %}
+  </form>
 </header>
 
-{% if not jobs %}
-  <div class="flex flex-col items-center justify-center py-xl text-on-surface-variant gap-sm">
-    <span class="material-symbols-outlined text-5xl text-outline-variant">inbox</span>
-    <p class="text-body-lg">No jobs yet.</p>
+<section class="flex flex-col gap-md">
+  <div class="flex items-baseline gap-md">
+    <h2 class="text-h2 text-on-background">Triage Inbox</h2>
+    <span class="text-body-md text-on-surface-variant">{{ inbox|length }} new</span>
   </div>
-{% else %}
-  <div id="job-list" class="flex flex-col gap-md max-w-[820px]">
-    {% for job, tweet in jobs %}
-      {% include "partials/job_row.html" %}
-    {% endfor %}
+  {% if not inbox %}
+    <div class="flex flex-col items-center justify-center py-lg bg-surface-container-lowest border border-outline-variant rounded-xl text-on-surface-variant gap-sm max-w-[820px]">
+      <span class="material-symbols-outlined text-4xl text-outline-variant">inbox</span>
+      <p class="text-body-md">No new jobs to triage.</p>
+    </div>
+  {% else %}
+    <div class="flex flex-col gap-md max-w-[820px]">
+      {% for job, tweet in inbox %}
+        {% include "partials/job_row.html" %}
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+
+<section class="flex flex-col gap-md">
+  <div class="flex items-baseline gap-md">
+    <h2 class="text-h2 text-on-background">To Apply</h2>
+    <span class="text-body-md text-on-surface-variant">{{ to_apply|length }} accepted, not yet applied</span>
   </div>
-{% endif %}
+  {% if not to_apply %}
+    <div class="flex flex-col items-center justify-center py-lg bg-surface-container-lowest border border-outline-variant rounded-xl text-on-surface-variant gap-sm max-w-[820px]">
+      <span class="material-symbols-outlined text-4xl text-outline-variant">checklist</span>
+      <p class="text-body-md">Nothing waiting. Accept jobs from the Inbox to add them here.</p>
+    </div>
+  {% else %}
+    <div class="flex flex-col gap-md max-w-[820px]">
+      {% for job, tweet in to_apply %}
+        {% include "partials/job_row.html" %}
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
 {% endblock %}

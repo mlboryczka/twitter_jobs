@@ -210,7 +210,7 @@ class JobPosting(Base):
             name="ck_job_postings_seniority",
         ),
         CheckConstraint(
-            "status IN ('new', 'accepted', 'dismissed')",
+            "status IN ('new', 'accepted', 'applied', 'dismissed')",
             name="ck_job_postings_status",
         ),
         Index("ix_job_postings_status_classified", "status", "classified_at"),
