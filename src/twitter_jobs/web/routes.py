@@ -64,6 +64,14 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         _: str = Depends(require_basic_auth),
     ) -> HTMLResponse:
         jobs = await _list_jobs(statuses=["new"], role=role, text_query=q)
+        # Defensive: even if a row's status='new' wasn't flipped to 'dismissed'
+        # at insert/reclassify time, never surface AVOID industries or
+        # explicitly non-US-eligible postings on the inbox.
+        jobs = [
+            jt for jt in jobs
+            if get_priority(jt[0].industry) != 0
+            and jt[0].is_us_eligible is not False
+        ]
         # Sort: P1 industries first, then P2.
         jobs.sort(key=lambda jt: get_priority(jt[0].industry))
         if priority == "1":

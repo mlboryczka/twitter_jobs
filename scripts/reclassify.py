@@ -142,6 +142,31 @@ async def main(limit: int | None, throttle: float, skip_classified: bool) -> Non
                 set_=update_set,
             )
             await session.execute(stmt)
+
+            # If this row's classification now puts it in an avoided bucket,
+            # flip status to 'dismissed' — but only if the user hasn't
+            # already triaged it manually.
+            if avoided or us_blocked:
+                from datetime import datetime, timezone
+                from sqlalchemy import update as sa_update
+                reason = (
+                    f"auto: avoided industry ({classification.industry})"
+                    if avoided
+                    else f"auto: not US-eligible (location: {classification.location or 'unspecified'})"
+                )
+                await session.execute(
+                    sa_update(JobPosting)
+                    .where(
+                        (JobPosting.tweet_id == t.tweet_id)
+                        & (JobPosting.status == "new")
+                    )
+                    .values(
+                        status="dismissed",
+                        dismissal_reason=reason,
+                        status_changed_at=datetime.now(timezone.utc),
+                    )
+                )
+
             reclassified += 1
     logger.info("reclassified %d tweets as target", reclassified)
 
