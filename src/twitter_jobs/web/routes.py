@@ -65,12 +65,17 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
     ) -> HTMLResponse:
         jobs = await _list_jobs(statuses=["new"], role=role, text_query=q)
         # Defensive: even if a row's status='new' wasn't flipped to 'dismissed'
-        # at insert/reclassify time, never surface AVOID industries or
-        # explicitly non-US-eligible postings on the inbox.
+        # at insert/reclassify time, never surface AVOID industries,
+        # non-US-eligible postings, or low-follower spam accounts.
+        from twitter_jobs.ingest.feed_worker import MIN_AUTHOR_FOLLOWERS
         jobs = [
             jt for jt in jobs
             if get_priority(jt[0].industry) != 0
             and jt[0].is_us_eligible is not False
+            and (
+                ((jt[1].author.public_metrics or {}).get("followers_count") or 0)
+                >= MIN_AUTHOR_FOLLOWERS
+            )
         ]
         # Sort: P1 industries first, then P2.
         jobs.sort(key=lambda jt: get_priority(jt[0].industry))

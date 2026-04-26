@@ -31,6 +31,13 @@ FEED_SINCE_ID_KEY = "feed_since_id"
 LAST_PULL_SUMMARY_KEY = "feed_last_pull_summary"
 MAX_PAGES_PER_RUN = 10
 IMAGE_SHORT_TEXT_THRESHOLD = 140  # chars
+MIN_AUTHOR_FOLLOWERS = 200  # spam threshold — accounts below this auto-dismiss
+
+
+def _author_followers_count(author: dict[str, Any]) -> int | None:
+    metrics = author.get("public_metrics") or {}
+    val = metrics.get("followers_count")
+    return int(val) if val is not None else None
 
 
 async def run_feed_pull() -> dict[str, Any]:
@@ -145,6 +152,8 @@ async def _classify_new(
             continue
         author = users_by_id.get(t.get("author_id", ""), {}) or {}
 
+        followers = _author_followers_count(author)
+
         # --- image flagging: skip classifier, push to manual review ---
         if _should_flag_as_image(t, author, ref_tweets_by_id):
             await _insert_job_posting(
@@ -162,6 +171,7 @@ async def _classify_new(
                     classifier_reasoning="Flagged for manual review: media attached with short caption + hiring signal. Classifier can't see images.",
                 ),
                 needs_manual_review=True,
+                author_followers=followers,
             )
             manual_inserted += 1
             continue
@@ -185,6 +195,7 @@ async def _classify_new(
             tweet_id=t["id"],
             classification=classification,
             needs_manual_review=False,
+            author_followers=followers,
         )
         jobs_inserted += 1
 
@@ -224,8 +235,9 @@ async def _insert_job_posting(
     tweet_id: str,
     classification: JobClassification,
     needs_manual_review: bool,
+    author_followers: int | None = None,
 ) -> None:
-    # Auto-dismiss in two cases — still inserted for transparency / later
+    # Auto-dismiss in three cases — still inserted for transparency / later
     # re-classification, but never hits the inbox.
     if is_avoided(classification.industry):
         status = "dismissed"
@@ -235,6 +247,14 @@ async def _insert_job_posting(
         status = "dismissed"
         dismissal_reason = (
             f"auto: not US-eligible (location: {classification.location or 'unspecified'})"
+        )
+        status_changed_at = datetime.utcnow()
+    elif (
+        author_followers is not None and author_followers < MIN_AUTHOR_FOLLOWERS
+    ):
+        status = "dismissed"
+        dismissal_reason = (
+            f"auto: low follower count ({author_followers} < {MIN_AUTHOR_FOLLOWERS})"
         )
         status_changed_at = datetime.utcnow()
     else:
