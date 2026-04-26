@@ -51,10 +51,17 @@ async def main(limit: int | None) -> None:
     logger.info("prefilter hits: %d", len(hits))
 
     reclassified = 0
-    for t, raw, author in hits:
+    for i, (t, raw, author) in enumerate(hits, 1):
         classification = await classify(raw, author, [raw])
         if classification is None:
+            logger.info("[%d/%d] classifier returned None — skipping", i, len(hits))
             continue
+        verdict = (
+            f"target={classification.role_category}/{classification.industry}"
+            if classification.is_target
+            else "not-target"
+        )
+        logger.info("[%d/%d] %s — %s", i, len(hits), t.tweet_id, verdict)
         async with session_scope() as session:
             if not classification.is_target:
                 # No longer a target — drop only if user hasn't triaged it.
