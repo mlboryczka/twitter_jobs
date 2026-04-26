@@ -1,62 +1,55 @@
+
+!eval_sets/.gitkeep
+# (versions/ is committed)
+# Alembic — don't ignore versions
+# Coverage / eval artifacts
+# Databases
+# IDEs
+# Logs
+# OS
 # Python
-__pycache__/
-*.py[cod]
+# Secrets
+# Virtual environments
+# uv
 *$py.class
+*.db
+*.egg
+*.egg-info/
+*.log
+*.py[cod]
 *.so
+*.sqlite
+*.sqlite3
+*.swo
+*.swp
+.DS_Store
 .Python
+.eggs/
+.env
+.env.local
+.idea/
+.installed.cfg
+.uv/
+.venv/
+.vscode/
+ENV/
+MANIFEST
+Thumbs.db
+__pycache__/
 build/
+data/
 develop-eggs/
 dist/
 downloads/
 eggs/
-.eggs/
+env/
+eval_sets/*.json
 lib/
 lib64/
 parts/
 sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# uv
-.uv/
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Secrets
-.env
-.env.local
 secrets/
-
-# Databases
-*.db
-*.sqlite
-*.sqlite3
-
-# Logs
-*.log
-
-# Alembic — don't ignore versions
-# (versions/ is committed)
-
-# Coverage / eval artifacts
-eval_sets/*.json
-!eval_sets/.gitkeep
+share/python-wheels/
+var/
+venv/
+wheels/

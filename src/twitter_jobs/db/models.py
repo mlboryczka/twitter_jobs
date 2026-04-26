@@ -145,6 +145,30 @@ class ApiCall(Base):
     __table_args__ = (Index("ix_api_calls_called_at", "called_at"),)
 
 
+class TrainingExample(Base):
+    __tablename__ = "training_examples"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    image_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_media_type: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tweet_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    author_handle: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decision: Mapped[str] = mapped_column(Text, nullable=False)
+    role_category: Mapped[str | None] = mapped_column(Text, nullable=True)
+    industry: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reasoning: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "decision IN ('accept', 'dismiss')", name="ck_training_examples_decision"
+        ),
+        Index("ix_training_examples_created_at", "created_at"),
+    )
+
+
 class JobPosting(Base):
     __tablename__ = "job_postings"
 

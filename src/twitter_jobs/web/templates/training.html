@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Training — twitter_jobs{% endblock %}
+
+{% block content %}
+<h2>Training examples</h2>
+<p style="color: var(--pico-muted-color); font-size: 0.9rem;">
+  Drop a screenshot of an X post that's a strong example for what you do or don't want.
+  Add a sentence about why. The classifier reads these on every run.
+</p>
+
+<form method="post" action="/training" enctype="multipart/form-data" style="margin-bottom: 2rem;">
+  <label class="dropzone" id="dropzone">
+    <input type="file" name="screenshot" id="screenshot" accept="image/*" style="display:none;">
+    <div id="drop-text">Drop a screenshot here, or click to choose</div>
+    <img id="preview" style="display:none; max-width:100%; max-height:400px; margin-top:0.5rem; border-radius:0.25rem;">
+  </label>
+
+  <div class="training-grid">
+    <label>
+      <span>Decision</span>
+      <select name="decision" required>
+        <option value="">Choose…</option>
+        <option value="accept">Accept (positive example)</option>
+        <option value="dismiss">Dismiss (negative example)</option>
+      </select>
+    </label>
+
+    <label>
+      <span>Role (optional)</span>
+      <select name="role_category">
+        <option value="">—</option>
+        {% for key, label in role_labels.items() %}
+          <option value="{{ key }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>
+      <span>Industry (optional)</span>
+      <select name="industry">
+        <option value="">—</option>
+        {% for key, label in industry_labels.items() %}
+          <option value="{{ key }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  <label>
+    <span>Why I picked this</span>
+    <textarea name="reasoning" rows="3" placeholder="e.g. 'Real corp dev role at growth-stage fintech, named company, real apply link, exactly the seniority I want.' The richer this is, the better the classifier learns."></textarea>
+  </label>
+
+  <details style="margin-bottom: 0.75rem;">
+    <summary style="font-size: 0.9rem; color: var(--pico-muted-color); cursor: pointer;">Manual overrides (only if OCR misreads)</summary>
+    <label style="margin-top: 0.5rem;">
+      <span>Tweet text override</span>
+      <textarea name="tweet_text_override" rows="2" placeholder="Leave blank to auto-extract from screenshot"></textarea>
+    </label>
+    <label>
+      <span>Author handle override</span>
+      <input type="text" name="author_handle_override" placeholder="e.g. jdoe (no @)">
+    </label>
+  </details>
+
+  <button type="submit">Save training example</button>
+</form>
+
+<h3>Saved examples ({{ examples|length }})</h3>
+{% if not examples %}
+  <p><em>None yet.</em></p>
+{% else %}
+  {% for ex in examples %}
+    <article class="job-card">
+      <div>
+        {% if ex.decision == 'accept' %}
+          <span class="role-chip prio-1">Accept</span>
+        {% else %}
+          <span class="role-chip prio-0">Dismiss</span>
+        {% endif %}
+        {% if ex.role_category %}<span class="role-chip">{{ role_labels.get(ex.role_category, ex.role_category) }}</span>{% endif %}
+        {% if ex.industry %}<span class="role-chip">{{ industry_labels.get(ex.industry, ex.industry) }}</span>{% endif %}
+        {% if ex.author_handle %}<span class="role-chip">@{{ ex.author_handle }}</span>{% endif %}
+        <span style="color: var(--pico-muted-color); font-size: 0.8rem;">{{ ex.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+      </div>
+      {% if ex.image_path %}
+        <img src="/training/image/{{ ex.image_path.split('/')[-1] }}" style="max-width: 100%; max-height: 320px; margin-top: 0.5rem; border-radius: 0.25rem;">
+      {% endif %}
+      {% if ex.tweet_text %}
+        <p style="white-space: pre-wrap;">{{ ex.tweet_text }}</p>
+      {% endif %}
+      {% if ex.reasoning %}
+        <div class="job-reasoning"><strong>Why:</strong> {{ ex.reasoning }}</div>
+      {% endif %}
+      <form method="post" action="/training/{{ ex.id }}/delete" style="margin-top: 0.5rem;" onsubmit="return confirm('Delete this training example?');">
+        <button type="submit" class="contrast" style="width: auto; padding: 0.3rem 0.8rem; font-size: 0.85rem;">Delete</button>
+      </form>
+    </article>
+  {% endfor %}
+{% endif %}
+
+<script>
+(function () {
+  const fileInput = document.getElementById("screenshot");
+  const zone = document.getElementById("dropzone");
+  const dropText = document.getElementById("drop-text");
+  const preview = document.getElementById("preview");
+
+  function showPreview(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      preview.src = e.target.result;
+      preview.style.display = "block";
+      dropText.textContent = file.name;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  fileInput.addEventListener("change", () => showPreview(fileInput.files[0]));
+
+  ["dragenter", "dragover"].forEach((ev) =>
+    zone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      zone.classList.add("dragging");
+    })
+  );
+  ["dragleave", "drop"].forEach((ev) =>
+    zone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      zone.classList.remove("dragging");
+    })
+  );
+  zone.addEventListener("drop", (e) => {
+    if (e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      showPreview(e.dataTransfer.files[0]);
+    }
+  });
+})();
+</script>
+{% endblock %}

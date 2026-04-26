@@ -5,9 +5,9 @@ system prompt. The model calls a single tool, ``record_classification``, whose
 schema defines every field on job_postings. We accept only the first tool call;
 if the model refuses or returns no tool call, we treat it as not-a-target.
 
-The model is ``claude-sonnet-4-6`` (Claude 4 Sonnet). Better at nuanced
-judgment than Haiku — matters for borderline "is this a hiring tweet in one
-of the five categories" calls — without the cost of Opus.
+The model is ``claude-haiku-4-5`` (Claude 4 Haiku). Cheap enough to run on
+every prefilter hit; with a rich few-shot prompt + the user's accept/dismiss
+feedback, accuracy is good enough that Sonnet/Opus aren't worth their cost.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from twitter_jobs.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-MODEL = "claude-sonnet-4-6"
+MODEL = "claude-haiku-4-5"
 MAX_TOKENS = 1024
 
 ROLE_CATEGORIES = ["corp_dev", "strategy", "bd", "ops", "cos", "unknown"]
@@ -262,6 +262,7 @@ def _format_tweet_block(
 
 
 FEEDBACK_EXAMPLE_LIMIT = 20
+TRAINING_EXAMPLE_LIMIT = 30
 
 
 def _few_shot_block() -> str:
@@ -269,6 +270,60 @@ def _few_shot_block() -> str:
     for ex in FEW_SHOT_EXAMPLES:
         rows.append(f"- Text: {ex['text']}\n  Expected: {json.dumps(ex['expected'])}")
     return "Examples of how to classify:\n\n" + "\n\n".join(rows)
+
+
+async def _training_examples_block() -> str:
+    """Pull manually-curated training examples uploaded via /training.
+
+    These are the user's most-considered ground-truth examples — usually with
+    rich reasoning attached — so we weight them slightly above the dashboard
+    accept/dismiss feedback.
+    """
+    from sqlalchemy import select
+
+    from twitter_jobs.db.models import TrainingExample
+    from twitter_jobs.db.session import session_scope
+
+    async with session_scope() as session:
+        stmt = (
+            select(TrainingExample)
+            .order_by(TrainingExample.created_at.desc())
+            .limit(TRAINING_EXAMPLE_LIMIT)
+        )
+        result = await session.execute(stmt)
+        rows = result.scalars().all()
+
+    if not rows:
+        return ""
+
+    header = (
+        "Curated training examples uploaded by the user. THIS user has hand-picked "
+        "each tweet below as a clear positive or negative case for what they're "
+        "looking for. The 'Reasoning' line is the user's own explanation. Treat "
+        "these as the highest-priority signal — even above dashboard "
+        "accept/dismiss decisions — when judging similar new tweets."
+    )
+
+    lines = [header]
+    for ex in rows:
+        decision = "POSITIVE EXAMPLE (accept)" if ex.decision == "accept" else "NEGATIVE EXAMPLE (dismiss)"
+        meta_parts: list[str] = []
+        if ex.role_category:
+            meta_parts.append(f"role_category={ex.role_category}")
+        if ex.industry:
+            meta_parts.append(f"industry={ex.industry}")
+        if ex.author_handle:
+            meta_parts.append(f"author=@{ex.author_handle}")
+        meta = ", ".join(meta_parts) if meta_parts else "no role/industry hint"
+        text = (ex.tweet_text or "").replace("\n", " ").strip()[:600]
+        reasoning = (ex.reasoning or "").strip() or "(no reasoning written)"
+        lines.append(
+            f"- {decision}\n"
+            f"  Hints: {meta}\n"
+            f"  Reasoning: {reasoning}\n"
+            f"  Tweet text: {text}"
+        )
+    return "\n\n".join(lines)
 
 
 async def _user_feedback_block() -> str:
@@ -352,6 +407,13 @@ async def classify(
 
     user_message = _format_tweet_block(tweet, author, thread_tweets)
     system_parts = [SYSTEM_PROMPT, _few_shot_block()]
+    try:
+        training = await _training_examples_block()
+    except Exception:
+        logger.exception("failed to load training examples; classifying without them")
+        training = ""
+    if training:
+        system_parts.append(training)
     try:
         feedback = await _user_feedback_block()
     except Exception:

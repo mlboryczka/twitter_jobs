@@ -5,9 +5,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import delete as sa_delete
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
@@ -18,7 +19,12 @@ from twitter_jobs.classify.industries import (
     PRIORITY_2,
     get_priority,
 )
-from twitter_jobs.db.models import ApiCall, JobPosting, Tweet, WorkerState
+from twitter_jobs.classify.training import (
+    ocr_screenshot,
+    save_image,
+    training_dir,
+)
+from twitter_jobs.db.models import ApiCall, JobPosting, TrainingExample, Tweet, WorkerState
 from twitter_jobs.db.session import session_scope
 from twitter_jobs.ingest.feed_worker import LAST_PULL_SUMMARY_KEY
 from twitter_jobs.web.auth import require_basic_auth
@@ -157,6 +163,96 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         _: str = Depends(require_basic_auth),
     ) -> HTMLResponse:
         return await _record_decision(tweet_id, request, "dismissed", feedback)
+
+    @router.get("/training", response_class=HTMLResponse)
+    async def training_page(
+        request: Request,
+        _: str = Depends(require_basic_auth),
+    ) -> HTMLResponse:
+        async with session_scope() as session:
+            res = await session.execute(
+                select(TrainingExample).order_by(TrainingExample.created_at.desc())
+            )
+            examples = res.scalars().all()
+        return templates.TemplateResponse(
+            request,
+            "training.html",
+            {
+                "examples": examples,
+                "industry_labels": INDUSTRY_LABELS,
+                "role_labels": ROLE_LABELS,
+                "page": "training",
+            },
+        )
+
+    @router.post("/training", response_class=HTMLResponse)
+    async def training_create(
+        request: Request,
+        decision: str = Form(...),
+        reasoning: str = Form(""),
+        role_category: str = Form(""),
+        industry: str = Form(""),
+        tweet_text_override: str = Form(""),
+        author_handle_override: str = Form(""),
+        screenshot: UploadFile | None = File(None),
+        _: str = Depends(require_basic_auth),
+    ) -> HTMLResponse:
+        if decision not in {"accept", "dismiss"}:
+            raise HTTPException(status_code=400, detail="invalid decision")
+
+        image_path: str | None = None
+        media_type: str | None = None
+        ocr_text = ""
+        ocr_handle: str | None = None
+
+        if screenshot is not None and screenshot.filename:
+            content = await screenshot.read()
+            if content:
+                path, media_type = save_image(content, screenshot.filename)
+                image_path = str(path.relative_to(training_dir().parent.parent))
+                ocr_text, ocr_handle = await ocr_screenshot(content, media_type)
+
+        tweet_text = tweet_text_override.strip() or ocr_text
+        author_handle = author_handle_override.strip() or ocr_handle
+
+        async with session_scope() as session:
+            session.add(
+                TrainingExample(
+                    image_path=image_path,
+                    image_media_type=media_type,
+                    tweet_text=tweet_text,
+                    author_handle=author_handle,
+                    decision=decision,
+                    role_category=role_category or None,
+                    industry=industry or None,
+                    reasoning=reasoning.strip(),
+                )
+            )
+
+        return RedirectResponse(url="/training", status_code=303)
+
+    @router.post("/training/{example_id}/delete", response_class=HTMLResponse)
+    async def training_delete(
+        example_id: int,
+        _: str = Depends(require_basic_auth),
+    ) -> HTMLResponse:
+        async with session_scope() as session:
+            await session.execute(
+                sa_delete(TrainingExample).where(TrainingExample.id == example_id)
+            )
+        return RedirectResponse(url="/training", status_code=303)
+
+    @router.get("/training/image/{filename}")
+    async def training_image(
+        filename: str,
+        _: str = Depends(require_basic_auth),
+    ) -> FileResponse:
+        # Restrict to data/training/ — no traversal.
+        safe_name = filename.replace("/", "").replace("\\", "")
+        path = training_dir() / safe_name
+        if not path.exists() or not path.is_file():
+            raise HTTPException(status_code=404)
+        return FileResponse(path)
 
     @router.get("/health")
     async def health() -> dict[str, Any]:

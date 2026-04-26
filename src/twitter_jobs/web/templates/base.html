@@ -102,6 +102,31 @@
       font-size: 0.9rem;
       height: auto;
     }
+    .dropzone {
+      display: block;
+      border: 2px dashed var(--pico-muted-border-color);
+      border-radius: 0.5rem;
+      padding: 2rem 1rem;
+      text-align: center;
+      color: var(--pico-muted-color);
+      cursor: pointer;
+      margin-bottom: 1rem;
+      transition: border-color 0.15s ease;
+    }
+    .dropzone.dragging {
+      border-color: var(--pico-primary);
+      background: var(--pico-primary-background);
+      color: var(--pico-primary-inverse);
+    }
+    .training-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    @media (max-width: 600px) {
+      .training-grid { grid-template-columns: 1fr; }
+    }
     .job-reasoning {
       margin-top: 0.5rem;
       padding: 0.5rem 0.75rem;
@@ -128,6 +153,7 @@
       <li><a href="/" {% if page == "dashboard" %}aria-current="page"{% endif %}>Dashboard</a></li>
       <li><a href="/review" {% if page == "review" %}aria-current="page"{% endif %}>Review</a></li>
       <li><a href="/all" {% if page == "all" %}aria-current="page"{% endif %}>All</a></li>
+      <li><a href="/training" {% if page == "training" %}aria-current="page"{% endif %}>Training</a></li>
       <li><a href="/health">Health</a></li>
     </ul>
   </nav>
