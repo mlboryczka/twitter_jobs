@@ -29,9 +29,10 @@ from twitter_jobs.ingest.feed_worker import (
     _write_worker_state,
 )
 from twitter_jobs.x_api.auth import XAuth
-from twitter_jobs.x_api.client import XClient
+from twitter_jobs.x_api.client import XAPIError, XClient
 from twitter_jobs.x_api.endpoints import search_recent
 from twitter_jobs.config import get_settings
+from sqlalchemy import delete as sa_delete
 
 logger = logging.getLogger(__name__)
 
@@ -90,13 +91,44 @@ async def run_search_pull() -> dict[str, Any]:
                     )
                     break
 
-                payload = await search_recent(
-                    client,
-                    query,
-                    since_id=since_id,
-                    next_token=next_token,
-                    max_results=SEARCH_MAX_RESULTS,
-                )
+                try:
+                    payload = await search_recent(
+                        client,
+                        query,
+                        since_id=since_id,
+                        next_token=next_token,
+                        max_results=SEARCH_MAX_RESULTS,
+                    )
+                except XAPIError as exc:
+                    # X search-recent only goes back 7 days. If our cursor is
+                    # older than that, drop it and retry without since_id so
+                    # this query starts fresh from the current 7d window.
+                    if (
+                        exc.status_code == 400
+                        and since_id is not None
+                        and "since_id" in exc.body
+                    ):
+                        logger.warning(
+                            "search query [%d] since_id=%s outside 7d window; clearing cursor and retrying",
+                            idx,
+                            since_id,
+                        )
+                        since_id = None
+                        async with session_scope() as session:
+                            await session.execute(
+                                sa_delete(WorkerState).where(
+                                    WorkerState.key == since_id_key
+                                )
+                            )
+                        payload = await search_recent(
+                            client,
+                            query,
+                            since_id=None,
+                            next_token=next_token,
+                            max_results=SEARCH_MAX_RESULTS,
+                        )
+                    else:
+                        raise
                 api_calls_total += 1
                 pages_total += 1
 
