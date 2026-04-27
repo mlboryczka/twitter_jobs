@@ -109,24 +109,6 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
             },
         )
 
-    @router.get("/review", response_class=HTMLResponse)
-    async def review(
-        request: Request,
-        _: str = Depends(require_basic_auth),
-    ) -> HTMLResponse:
-        jobs = await _list_jobs(needs_manual_review=True, statuses=["new"])
-        return templates.TemplateResponse(
-            request,
-            "review.html",
-            {
-                "jobs": jobs,
-                "role_labels": ROLE_LABELS,
-                "industry_labels": INDUSTRY_LABELS,
-                "priority_for": get_priority,
-                "page": "review",
-            },
-        )
-
     @router.get("/all", response_class=HTMLResponse)
     async def all_jobs(
         request: Request,
