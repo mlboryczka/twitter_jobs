@@ -88,10 +88,21 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         inbox.sort(key=lambda jt: get_priority(jt[0].industry))
         if priority == "1":
             inbox = [jt for jt in inbox if get_priority(jt[0].industry) == 1]
+        elif priority and priority in INDUSTRY_LABELS:
+            inbox = [jt for jt in inbox if jt[0].industry == priority]
 
         # Section 2: status='accepted' — accepted-but-not-yet-applied.
         to_apply = await _list_jobs(statuses=["accepted"], role=role, text_query=q)
         to_apply.sort(key=lambda jt: get_priority(jt[0].industry))
+
+        p1_industries = sorted(
+            (i for i in INDUSTRY_LABELS if i in PRIORITY_1),
+            key=lambda i: INDUSTRY_LABELS[i],
+        )
+        p2_industries = sorted(
+            (i for i in INDUSTRY_LABELS if i in PRIORITY_2),
+            key=lambda i: INDUSTRY_LABELS[i],
+        )
 
         return templates.TemplateResponse(
             request,
@@ -102,6 +113,8 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
                 "role_labels": ROLE_LABELS,
                 "industry_labels": INDUSTRY_LABELS,
                 "priority_for": get_priority,
+                "p1_industries": p1_industries,
+                "p2_industries": p2_industries,
                 "active_role": role,
                 "active_priority": priority,
                 "text_query": q or "",
