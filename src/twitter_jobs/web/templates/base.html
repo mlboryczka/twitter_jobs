@@ -15,26 +15,27 @@
       theme: {
         extend: {
           colors: {
+            // Brand
             primary: "#00629d",
             "on-primary": "#ffffff",
             "primary-container": "#1d9bf0",
-            "primary-fixed": "#cfe5ff",
-            "primary-fixed-dim": "#99cbff",
             "on-primary-container": "#003050",
+            // Success / Accept (DESIGN.md "Emerald")
             secondary: "#006c49",
             "on-secondary": "#ffffff",
             "secondary-container": "#6cf8bb",
-            "secondary-fixed": "#6ffbbe",
-            "secondary-fixed-dim": "#4edea3",
             "on-secondary-container": "#00714d",
+            // Dismiss / Reject (DESIGN.md "Soft Ruby")
             tertiary: "#be0037",
+            "on-tertiary": "#ffffff",
             "tertiary-container": "#ff5c6f",
-            "tertiary-fixed": "#ffdada",
-            "tertiary-fixed-dim": "#ffb3b6",
             "on-tertiary-container": "#630018",
+            // Error
             error: "#ba1a1a",
+            "on-error": "#ffffff",
             "error-container": "#ffdad6",
             "on-error-container": "#93000a",
+            // Surface ladder
             background: "#f8f9ff",
             surface: "#f8f9ff",
             "on-background": "#0b1c30",
@@ -46,13 +47,39 @@
             "surface-container-high": "#dce9ff",
             "surface-container-highest": "#d3e4fe",
             "surface-variant": "#d3e4fe",
+            "inverse-surface": "#213145",
+            "inverse-on-surface": "#eaf1ff",
+            // Lines
             outline: "#6f7883",
             "outline-variant": "#bfc7d3"
           },
-          borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+          borderRadius: {
+            sm: "0.25rem",
+            DEFAULT: "0.25rem",
+            lg: "0.5rem",
+            xl: "0.75rem",
+            full: "9999px"
+          },
           spacing: {
-            xs: "4px", sm: "8px", base: "8px", md: "16px", lg: "24px", xl: "40px",
-            gutter: "20px", "container-max": "1280px"
+            xs: "4px",
+            sm: "8px",
+            md: "16px",
+            lg: "24px",
+            xl: "40px",
+            gutter: "20px",
+            "container-max": "1280px"
+          },
+          maxWidth: {
+            reading: "820px",
+            "container-max": "1280px"
+          },
+          boxShadow: {
+            // DESIGN.md depth ladder
+            card: "0px 2px 4px rgba(0,0,0,0.02)",
+            elevated: "0px 4px 12px rgba(0,0,0,0.05)",
+            overlay: "0px 12px 32px rgba(0,0,0,0.10)",
+            // Primary-button "lift"
+            lift: "0px 2px 0px rgba(0,0,0,0.10)"
           },
           fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
           fontSize: {
