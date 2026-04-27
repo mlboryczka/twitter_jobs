@@ -21,19 +21,13 @@
           {% endfor %}
         </select>
       </label>
-      <div class="flex flex-col gap-xs">
+      <label class="flex flex-col gap-xs min-w-[200px]">
         <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Priority</span>
-        <div class="flex flex-wrap items-center gap-xs">
-          <label class="cursor-pointer">
-            <input type="radio" name="priority" value="" class="peer sr-only" {% if not active_priority %}checked{% endif %} onchange="this.form.submit()">
-            <span class="block px-md py-xs rounded-full text-label-md font-medium border border-outline-variant bg-surface-container-lowest text-on-surface-variant peer-checked:bg-on-background peer-checked:text-background peer-checked:border-on-background transition-colors">All priorities</span>
-          </label>
-          <label class="cursor-pointer">
-            <input type="radio" name="priority" value="1" class="peer sr-only" {% if active_priority == '1' %}checked{% endif %} onchange="this.form.submit()">
-            <span class="block px-md py-xs rounded-full text-label-md font-bold border border-outline-variant bg-surface-container-lowest text-on-surface-variant peer-checked:bg-secondary-container peer-checked:text-on-secondary-container peer-checked:border-secondary-container transition-colors">P1 only</span>
-          </label>
-        </div>
-      </div>
+        <select name="priority" onchange="this.form.submit()" class="px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-md text-on-background focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+          <option value="" {% if not active_priority %}selected{% endif %}>All priorities</option>
+          <option value="1" {% if active_priority == '1' %}selected{% endif %}>P1 only</option>
+        </select>
+      </label>
     </div>
     <div class="relative">
       <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">search</span>
