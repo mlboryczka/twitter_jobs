@@ -10,25 +10,37 @@
     </p>
   </div>
 
-  <div class="flex flex-wrap items-center gap-xs">
-    <a href="/" class="px-md py-xs rounded-full text-label-md font-medium border transition-colors {% if not active_role %}bg-on-background text-background border-on-background{% else %}bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low{% endif %}">All roles</a>
-    {% for key, label in role_labels.items() %}
-      <a href="/?role={{ key }}" class="px-md py-xs rounded-full text-label-md font-medium border transition-colors {% if active_role == key %}bg-on-background text-background border-on-background{% else %}bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low{% endif %}">{{ label }}</a>
-    {% endfor %}
-  </div>
-
-  <div class="flex flex-wrap items-center gap-xs">
-    <a href="/{% if active_role %}?role={{ active_role }}{% endif %}" class="px-md py-xs rounded-full text-label-md font-medium border transition-colors {% if not active_priority %}bg-on-background text-background border-on-background{% else %}bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low{% endif %}">All priorities</a>
-    <a href="/?priority=1{% if active_role %}&role={{ active_role }}{% endif %}" class="px-md py-xs rounded-full text-label-md font-bold border transition-colors {% if active_priority == '1' %}bg-secondary-container text-on-secondary-container border-secondary-container{% else %}bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low{% endif %}">P1 only</a>
-  </div>
-
-  <form action="/" method="get" class="relative">
-    <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">search</span>
-    <input type="search" name="q" value="{{ text_query }}"
-           placeholder="Search company, location, tweet text…"
-           class="w-full pl-12 pr-md py-sm bg-surface-container-low border border-outline-variant rounded-full text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-    {% if active_role %}<input type="hidden" name="role" value="{{ active_role }}">{% endif %}
-    {% if active_priority %}<input type="hidden" name="priority" value="{{ active_priority }}">{% endif %}
+  <form action="/" method="get" class="flex flex-col gap-md">
+    <div class="flex flex-wrap items-end gap-lg">
+      <label class="flex flex-col gap-xs min-w-[200px]">
+        <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Role</span>
+        <select name="role" onchange="this.form.submit()" class="px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-md text-on-background focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+          <option value="">All roles</option>
+          {% for key, label in role_labels.items() %}
+            <option value="{{ key }}" {% if active_role == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <div class="flex flex-col gap-xs">
+        <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Priority</span>
+        <div class="flex flex-wrap items-center gap-xs">
+          <label class="cursor-pointer">
+            <input type="radio" name="priority" value="" class="peer sr-only" {% if not active_priority %}checked{% endif %} onchange="this.form.submit()">
+            <span class="block px-md py-xs rounded-full text-label-md font-medium border border-outline-variant bg-surface-container-lowest text-on-surface-variant peer-checked:bg-on-background peer-checked:text-background peer-checked:border-on-background transition-colors">All priorities</span>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="priority" value="1" class="peer sr-only" {% if active_priority == '1' %}checked{% endif %} onchange="this.form.submit()">
+            <span class="block px-md py-xs rounded-full text-label-md font-bold border border-outline-variant bg-surface-container-lowest text-on-surface-variant peer-checked:bg-secondary-container peer-checked:text-on-secondary-container peer-checked:border-secondary-container transition-colors">P1 only</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="relative">
+      <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">search</span>
+      <input type="search" name="q" value="{{ text_query }}"
+             placeholder="Search company, location, tweet text…"
+             class="w-full pl-12 pr-md py-sm bg-surface-container-low border border-outline-variant rounded-full text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+    </div>
   </form>
 </header>
 
