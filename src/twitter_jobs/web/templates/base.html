@@ -104,7 +104,7 @@
 <body class="bg-background text-on-background antialiased min-h-screen">
   <nav class="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-8 h-16 bg-surface-container-lowest border-b border-outline-variant shadow-card">
     <div class="flex items-center gap-lg">
-      <a href="/" class="text-xl font-black text-primary-container">twitter_jobs</a>
+      <a href="/" class="text-h3 font-bold text-primary">twitter_jobs</a>
     </div>
     <div class="hidden md:flex items-end h-full gap-lg text-sm font-medium">
       <a href="/" class="pb-4 h-full flex items-end transition-colors {% if page == 'dashboard' %}text-primary border-b-2 border-primary{% else %}text-on-surface-variant hover:text-primary{% endif %}">Dashboard</a>
@@ -114,7 +114,7 @@
     </div>
     <div></div>
   </nav>
-  <main class="pt-[80px] px-xl pb-xl mx-auto min-h-screen flex flex-col gap-lg w-full max-w-[1100px]">
+  <main class="pt-[80px] px-xl pb-xl mx-auto min-h-screen flex flex-col gap-lg w-full max-w-container-max">
     {% block content %}{% endblock %}
   </main>
 </body>

@@ -39,8 +39,8 @@
     <input type="number" name="days" min="1" max="365" value="{{ active_days or 30 }}"
            class="px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-md text-on-background focus:border-primary focus:ring-1 focus:ring-primary outline-none">
   </label>
-  <button type="submit" class="px-lg py-sm rounded-lg bg-primary text-on-primary text-label-md hover:bg-primary/90 transition-colors h-[42px]">Apply</button>
-  <a href="/all" class="px-md py-sm text-primary text-label-md hover:bg-primary/10 rounded-lg transition-colors h-[42px] flex items-center">Clear</a>
+  <button type="submit" class="px-lg py-sm rounded-lg bg-primary text-on-primary text-label-md hover:bg-primary/90 shadow-lift transition-colors h-[42px]">Apply</button>
+  <a href="/all" class="px-md py-sm text-primary text-label-md hover:bg-surface-container-low rounded-lg transition-colors h-[42px] flex items-center">Clear</a>
 </form>
 
 {% if not jobs %}
@@ -56,12 +56,12 @@
       <div class="col-span-2">Status</div>
       <div class="col-span-2">Date</div>
     </div>
-    <div class="divide-y divide-outline-variant/40">
+    <div class="divide-y divide-outline-variant">
       {% for job, tweet in jobs %}
         {% set p = priority_for(job.industry) %}
         <div class="grid grid-cols-1 md:grid-cols-12 gap-md px-lg py-md hover:bg-surface-container-low/30 transition-colors">
           <div class="md:col-span-5 flex items-center gap-sm min-w-0">
-            <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-bold shrink-0">{{ (job.company or tweet.author.name or tweet.author.username or '?')[:1]|upper }}</div>
+            <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-on-primary font-bold shrink-0">{{ (job.company or tweet.author.name or tweet.author.username or '?')[:1]|upper }}</div>
             <div class="min-w-0">
               <p class="text-label-md text-on-background truncate">{{ (job.company or (tweet.author.name or '@' ~ tweet.author.username))|x_text }}</p>
               <p class="text-body-md text-on-surface-variant truncate">{{ (tweet.text[:120])|x_text }}{% if tweet.text|length > 120 %}…{% endif %}</p>

@@ -2,7 +2,7 @@
 {% set p = priority_for(job.industry) %}
 <article id="job-{{ job.tweet_id }}" class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-card hover:shadow-elevated transition-shadow flex flex-col">
   {% if job.needs_manual_review %}
-    <div class="flex items-center gap-xs px-md py-sm rounded-t-xl bg-tertiary-container/20 text-on-tertiary-container border-b border-tertiary-container/40 text-sm">
+    <div class="flex items-center gap-xs px-md py-sm rounded-t-xl bg-tertiary-container/20 text-on-tertiary-container border-b border-tertiary-container/40 text-body-md">
       <span class="material-symbols-outlined text-base">warning</span>
       <span>Manual review — {{ job.classifier_reasoning|x_text }}</span>
     </div>
@@ -12,7 +12,7 @@
     {# Row 1: avatar + name/location, chips on right #}
     <div class="flex items-start justify-between gap-md">
       <div class="flex items-center gap-md min-w-0">
-        <div class="w-12 h-12 rounded-lg bg-primary-container flex items-center justify-center text-on-primary text-h3 font-bold shrink-0">{{ initial }}</div>
+        <div class="w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-on-primary text-h3 font-bold shrink-0">{{ initial }}</div>
         <div class="min-w-0">
           <h2 class="text-h3 text-on-background truncate">{% if job.company %}{{ job.company|x_text }}{% else %}{{ (tweet.author.name or ('@' ~ tweet.author.username))|x_text }}{% endif %}</h2>
           <p class="text-body-md text-on-surface-variant flex items-center gap-xs mt-0.5 truncate">
@@ -37,17 +37,17 @@
     </div>
 
     {# Row 2: tweet body, indented to align with avatar's right edge #}
-    <p class="text-body-lg text-on-surface leading-relaxed whitespace-pre-wrap pl-[60px]">{{ tweet.text|x_text }}</p>
+    <p class="text-body-lg text-on-surface leading-relaxed whitespace-pre-wrap pl-[64px]">{{ tweet.text|x_text }}</p>
 
     {# Row 3: footer — meta on left, actions on right #}
-    <div class="flex items-center justify-between gap-md pl-[60px] mt-xs flex-wrap">
-      <div class="flex items-center gap-md text-sm text-on-surface-variant min-w-0">
+    <div class="flex items-center justify-between gap-md pl-[64px] mt-xs flex-wrap">
+      <div class="flex items-center gap-md text-body-md text-on-surface-variant min-w-0">
         <span class="truncate">@{{ tweet.author.username }} · {{ tweet.created_at.strftime("%b %-d, %Y") }}</span>
-        <a href="https://x.com/{{ tweet.author.username }}/status/{{ tweet.tweet_id }}" target="_blank" rel="noopener" class="text-primary hover:underline flex items-center gap-xs">
+        <a href="https://x.com/{{ tweet.author.username }}/status/{{ tweet.tweet_id }}" target="_blank" rel="noopener" class="text-primary hover:underline text-label-md flex items-center gap-xs">
           <span class="material-symbols-outlined text-base">open_in_new</span>View on X
         </a>
         {% if job.apply_link %}
-          <a href="{{ job.apply_link }}" target="_blank" rel="noopener" class="text-primary hover:underline flex items-center gap-xs">
+          <a href="{{ job.apply_link }}" target="_blank" rel="noopener" class="text-primary hover:underline text-label-md flex items-center gap-xs">
             <span class="material-symbols-outlined text-base">link</span>Apply
           </a>
         {% endif %}
@@ -103,7 +103,7 @@
 
     {% if job.classifier_reasoning and not job.needs_manual_review %}
       <details class="bg-surface-container-low border border-outline-variant rounded-lg">
-        <summary class="cursor-pointer px-md py-sm text-sm text-on-surface-variant flex items-center justify-between hover:bg-surface-container">
+        <summary class="cursor-pointer px-md py-sm text-label-md text-on-surface-variant flex items-center justify-between hover:bg-surface-container">
           <span class="flex items-center gap-xs"><span class="material-symbols-outlined text-base">psychology</span>Classifier reasoning</span>
           <span class="material-symbols-outlined text-base">expand_more</span>
         </summary>
