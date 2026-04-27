@@ -21,13 +21,15 @@
           {% endfor %}
         </select>
       </label>
-      <label class="flex flex-col gap-xs min-w-[200px]">
+      <div class="flex flex-col gap-xs min-w-[200px]">
         <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Priority</span>
-        <select name="priority" onchange="this.form.submit()" class="px-md py-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-md text-on-background focus:border-primary focus:ring-1 focus:ring-primary outline-none">
-          <option value="" {% if not active_priority %}selected{% endif %}>All priorities</option>
-          <option value="1" {% if active_priority == '1' %}selected{% endif %}>P1 only</option>
-        </select>
-      </label>
+        <nav class="flex flex-col bg-surface-container-low border border-outline-variant rounded-lg overflow-hidden">
+          <a href="/{% if active_role %}?role={{ active_role }}{% endif %}{% if text_query %}{{ '&' if active_role else '?' }}q={{ text_query }}{% endif %}"
+             class="px-md py-sm text-body-md transition-colors {% if not active_priority %}bg-on-background text-background font-semibold{% else %}text-on-surface-variant hover:bg-surface-container{% endif %}">All priorities</a>
+          <a href="/?priority=1{% if active_role %}&role={{ active_role }}{% endif %}{% if text_query %}&q={{ text_query }}{% endif %}"
+             class="px-md py-sm text-body-md border-t border-outline-variant transition-colors {% if active_priority == '1' %}bg-secondary-container text-on-secondary-container font-semibold{% else %}text-on-surface-variant hover:bg-surface-container{% endif %}">P1 only</a>
+        </nav>
+      </div>
     </div>
     <div class="relative">
       <span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">search</span>
