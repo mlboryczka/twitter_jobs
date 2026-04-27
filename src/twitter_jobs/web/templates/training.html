@@ -23,7 +23,7 @@
     </div>
   </label>
 
-  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col gap-md shadow-sm">
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col gap-md shadow-card">
     <h2 class="text-h2 text-on-background">Annotation</h2>
 
     <div>
@@ -98,7 +98,7 @@
   {% else %}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-md">
       {% for ex in examples %}
-        <article class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden flex flex-col">
+        <article class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-card overflow-hidden flex flex-col">
           {% if ex.image_path %}
             <img src="/training/image/{{ ex.image_path.split('/')[-1] }}" class="w-full max-h-72 object-cover border-b border-outline-variant">
           {% endif %}
@@ -109,7 +109,7 @@
               {% else %}
                 <span class="text-label-sm font-bold uppercase px-sm py-xs rounded-full bg-error-container/40 text-on-error-container border border-error-container">Dismiss</span>
               {% endif %}
-              {% if ex.role_category %}<span class="text-label-sm font-medium px-sm py-xs rounded-full bg-primary-fixed text-on-primary-container border border-primary-fixed-dim">{{ role_labels.get(ex.role_category, ex.role_category) }}</span>{% endif %}
+              {% if ex.role_category %}<span class="text-label-sm font-medium px-sm py-xs rounded-full bg-primary-container/20 text-on-primary-container border border-primary-container/40">{{ role_labels.get(ex.role_category, ex.role_category) }}</span>{% endif %}
               {% if ex.industry %}<span class="text-label-sm font-medium px-sm py-xs rounded-full bg-surface-container text-on-surface-variant border border-outline-variant">{{ industry_labels.get(ex.industry, ex.industry) }}</span>{% endif %}
               {% if ex.author_handle %}<span class="text-label-sm text-on-surface-variant">@{{ ex.author_handle }}</span>{% endif %}
               <span class="ml-auto text-xs text-outline">{{ ex.created_at.strftime("%Y-%m-%d %H:%M") }}</span>

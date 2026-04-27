@@ -7,7 +7,7 @@
   <p class="text-body-md text-on-surface-variant">A comprehensive log of every classified job, including auto-dismissed ones.</p>
 </header>
 
-<form method="get" action="/all" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm flex flex-wrap items-end gap-md">
+<form method="get" action="/all" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-card flex flex-wrap items-end gap-md">
   <label class="flex-1 min-w-[220px] flex flex-col gap-xs">
     <span class="text-label-sm text-on-surface-variant">Search</span>
     <div class="relative">
@@ -49,7 +49,7 @@
     <p class="text-body-lg">Nothing matches.</p>
   </div>
 {% else %}
-  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-card overflow-hidden">
     <div class="hidden md:grid grid-cols-12 gap-md px-lg py-sm bg-surface-container-low/60 border-b border-outline-variant text-label-sm uppercase tracking-wider text-on-surface-variant">
       <div class="col-span-5">Job</div>
       <div class="col-span-3">Classification</div>
@@ -82,7 +82,7 @@
                 <span class="text-label-sm font-bold uppercase px-sm py-xs rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant">P2 · {{ industry_labels.get(job.industry, job.industry) }}</span>
               {% endif %}
             {% endif %}
-            <span class="text-label-sm font-medium px-sm py-xs rounded-full bg-primary-fixed text-on-primary-container border border-primary-fixed-dim">{{ role_labels.get(job.role_category, job.role_category) }}</span>
+            <span class="text-label-sm font-medium px-sm py-xs rounded-full bg-primary-container/20 text-on-primary-container border border-primary-container/40">{{ role_labels.get(job.role_category, job.role_category) }}</span>
             {% if job.seniority %}<span class="text-label-sm font-medium px-sm py-xs rounded-full bg-surface-container text-on-surface-variant border border-outline-variant">{{ job.seniority }}</span>{% endif %}
           </div>
           <div class="md:col-span-2 flex items-center">

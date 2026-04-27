@@ -1,8 +1,8 @@
 {% set initial = (job.company or tweet.author.name or tweet.author.username or '?')[:1]|upper %}
 {% set p = priority_for(job.industry) %}
-<article id="job-{{ job.tweet_id }}" class="bg-surface-container-lowest border border-outline-variant/60 rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col">
+<article id="job-{{ job.tweet_id }}" class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-card hover:shadow-elevated transition-shadow flex flex-col">
   {% if job.needs_manual_review %}
-    <div class="flex items-center gap-xs px-md py-sm rounded-t-xl bg-tertiary-fixed text-on-tertiary-container border-b border-tertiary-fixed-dim text-sm">
+    <div class="flex items-center gap-xs px-md py-sm rounded-t-xl bg-tertiary-container/20 text-on-tertiary-container border-b border-tertiary-container/40 text-sm">
       <span class="material-symbols-outlined text-base">warning</span>
       <span>Manual review — {{ job.classifier_reasoning|x_text }}</span>
     </div>
@@ -31,7 +31,7 @@
             <span class="text-label-sm uppercase tracking-wide font-bold px-sm py-xs rounded-full border bg-surface-container-high text-on-surface-variant border-outline-variant">P2 · {{ industry_labels.get(job.industry, job.industry) }}</span>
           {% endif %}
         {% endif %}
-        <span class="text-label-sm font-semibold px-sm py-xs rounded-full bg-primary-fixed text-on-primary-container border border-primary-fixed-dim">{{ role_labels.get(job.role_category, job.role_category) }}</span>
+        <span class="text-label-sm font-semibold px-sm py-xs rounded-full bg-primary-container/20 text-on-primary-container border border-primary-container/40">{{ role_labels.get(job.role_category, job.role_category) }}</span>
         {% if job.seniority %}<span class="text-label-sm font-medium px-sm py-xs rounded-full bg-surface-container text-on-surface-variant border border-outline-variant">{{ job.seniority }}</span>{% endif %}
       </div>
     </div>
@@ -55,23 +55,23 @@
       {% if job.status == "new" %}
         <div class="flex items-center gap-xs">
           <details class="relative">
-            <summary class="list-none cursor-pointer px-md py-sm rounded-lg text-label-md font-medium border border-tertiary-fixed-dim bg-tertiary-fixed/50 text-on-tertiary-container hover:bg-tertiary-fixed transition-colors flex items-center gap-xs">
+            <summary class="list-none cursor-pointer px-md py-sm rounded-lg text-label-md font-medium border border-tertiary-container/40 bg-tertiary-container/20 text-on-tertiary-container hover:bg-tertiary-container/30 transition-colors flex items-center gap-xs">
               <span class="material-symbols-outlined text-base">close</span>Dismiss
             </summary>
-            <form class="absolute right-0 mt-sm bg-surface-container-lowest border border-outline-variant rounded-lg shadow-lg p-sm w-80 z-10 flex flex-col gap-xs"
+            <form class="absolute right-0 mt-sm bg-surface-container-lowest border border-outline-variant rounded-lg shadow-overlay p-sm w-80 z-10 flex flex-col gap-xs"
                   hx-post="/jobs/{{ job.tweet_id }}/dismiss" hx-target="#job-{{ job.tweet_id }}" hx-swap="outerHTML">
               <textarea name="feedback" rows="2" placeholder="Why dismiss? (optional)" class="w-full px-sm py-xs text-body-md border border-outline-variant rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
-              <button type="submit" class="self-end px-md py-xs rounded-lg bg-tertiary-fixed text-on-tertiary-container text-label-md border border-tertiary-fixed-dim hover:bg-tertiary-fixed-dim">Save</button>
+              <button type="submit" class="self-end px-md py-xs rounded-lg bg-tertiary-container/20 text-on-tertiary-container text-label-md border border-tertiary-container/40 hover:bg-tertiary-container/30">Save</button>
             </form>
           </details>
           <details class="relative">
-            <summary class="list-none cursor-pointer px-md py-sm rounded-lg text-label-md font-medium bg-primary text-on-primary hover:bg-primary/90 transition-colors flex items-center gap-xs">
+            <summary class="list-none cursor-pointer px-md py-sm rounded-lg text-label-md font-medium bg-primary text-on-primary hover:bg-primary/90 shadow-lift transition-colors flex items-center gap-xs">
               <span class="material-symbols-outlined text-base">check</span>Accept
             </summary>
-            <form class="absolute right-0 mt-sm bg-surface-container-lowest border border-outline-variant rounded-lg shadow-lg p-sm w-80 z-10 flex flex-col gap-xs"
+            <form class="absolute right-0 mt-sm bg-surface-container-lowest border border-outline-variant rounded-lg shadow-overlay p-sm w-80 z-10 flex flex-col gap-xs"
                   hx-post="/jobs/{{ job.tweet_id }}/accept" hx-target="#job-{{ job.tweet_id }}" hx-swap="outerHTML">
               <textarea name="feedback" rows="2" placeholder="Why is this a good fit? (optional)" class="w-full px-sm py-xs text-body-md border border-outline-variant rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
-              <button type="submit" class="self-end px-md py-xs rounded-lg bg-primary text-on-primary text-label-md hover:bg-primary/90">Save</button>
+              <button type="submit" class="self-end px-md py-xs rounded-lg bg-primary text-on-primary text-label-md hover:bg-primary/90 shadow-lift">Save</button>
             </form>
           </details>
         </div>
@@ -79,13 +79,13 @@
         <div class="flex items-center gap-xs">
           <form hx-post="/jobs/{{ job.tweet_id }}/dismiss" hx-target="#job-{{ job.tweet_id }}" hx-swap="outerHTML">
             <input type="hidden" name="feedback" value="changed mind after accepting">
-            <button type="submit" class="px-md py-sm rounded-lg text-label-md font-medium border border-tertiary-fixed-dim bg-tertiary-fixed/50 text-on-tertiary-container hover:bg-tertiary-fixed transition-colors flex items-center gap-xs">
+            <button type="submit" class="px-md py-sm rounded-lg text-label-md font-medium border border-tertiary-container/40 bg-tertiary-container/20 text-on-tertiary-container hover:bg-tertiary-container/30 transition-colors flex items-center gap-xs">
               <span class="material-symbols-outlined text-base">close</span>Dismiss
             </button>
           </form>
           <form hx-post="/jobs/{{ job.tweet_id }}/applied" hx-target="#job-{{ job.tweet_id }}" hx-swap="outerHTML">
             <input type="hidden" name="feedback" value="">
-            <button type="submit" class="px-md py-sm rounded-lg text-label-md font-medium bg-secondary text-on-secondary hover:bg-secondary/90 transition-colors flex items-center gap-xs">
+            <button type="submit" class="px-md py-sm rounded-lg text-label-md font-medium bg-secondary text-on-secondary hover:bg-secondary/90 shadow-lift transition-colors flex items-center gap-xs">
               <span class="material-symbols-outlined text-base">task_alt</span>Applied
             </button>
           </form>
