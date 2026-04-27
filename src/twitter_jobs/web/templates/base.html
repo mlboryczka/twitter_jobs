@@ -102,17 +102,16 @@
   </style>
 </head>
 <body class="bg-background text-on-background antialiased min-h-screen">
-  <nav class="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-8 h-16 bg-surface-container-lowest border-b border-outline-variant shadow-card">
-    <div class="flex items-center gap-lg">
+  <nav class="fixed top-0 inset-x-0 z-50 h-16 bg-surface-container-lowest border-b border-outline-variant shadow-card">
+    <div class="mx-auto max-w-container-max h-full px-xl flex items-center justify-between gap-lg">
       <a href="/" class="text-h3 font-bold text-primary">twitter_jobs</a>
+      <div class="hidden md:flex items-end h-full gap-lg text-sm font-medium">
+        <a href="/" class="pb-4 h-full flex items-end transition-colors {% if page == 'dashboard' %}text-primary border-b-2 border-primary{% else %}text-on-surface-variant hover:text-primary{% endif %}">Dashboard</a>
+        <a href="/all" class="pb-4 h-full flex items-end transition-colors {% if page == 'all' %}text-primary border-b-2 border-primary{% else %}text-on-surface-variant hover:text-primary{% endif %}">All History</a>
+        <a href="/training" class="pb-4 h-full flex items-end transition-colors {% if page == 'training' %}text-primary border-b-2 border-primary{% else %}text-on-surface-variant hover:text-primary{% endif %}">Training</a>
+        <a href="/health" class="pb-4 h-full flex items-end transition-colors text-on-surface-variant hover:text-primary">Health</a>
+      </div>
     </div>
-    <div class="hidden md:flex items-end h-full gap-lg text-sm font-medium">
-      <a href="/" class="pb-4 h-full flex items-end transition-colors {% if page == 'dashboard' %}text-primary border-b-2 border-primary{% else %}text-on-surface-variant hover:text-primary{% endif %}">Dashboard</a>
-      <a href="/all" class="pb-4 h-full flex items-end transition-colors {% if page == 'all' %}text-primary border-b-2 border-primary{% else %}text-on-surface-variant hover:text-primary{% endif %}">All History</a>
-      <a href="/training" class="pb-4 h-full flex items-end transition-colors {% if page == 'training' %}text-primary border-b-2 border-primary{% else %}text-on-surface-variant hover:text-primary{% endif %}">Training</a>
-      <a href="/health" class="pb-4 h-full flex items-end transition-colors text-on-surface-variant hover:text-primary">Health</a>
-    </div>
-    <div></div>
   </nav>
   <main class="pt-[80px] px-xl pb-xl mx-auto min-h-screen flex flex-col gap-lg w-full max-w-container-max">
     {% block content %}{% endblock %}

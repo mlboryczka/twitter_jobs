@@ -38,9 +38,9 @@
     <span class="text-body-md text-on-surface-variant">{{ inbox|length }} new</span>
   </div>
   {% if not inbox %}
-    <div class="flex flex-col items-center justify-center py-lg bg-surface-container-lowest border border-outline-variant rounded-xl text-on-surface-variant gap-sm max-w-reading">
-      <span class="material-symbols-outlined text-4xl text-outline-variant">inbox</span>
-      <p class="text-body-md">No new jobs to triage.</p>
+    <div class="flex items-center gap-sm px-md py-sm text-on-surface-variant max-w-reading">
+      <span class="material-symbols-outlined text-base text-outline">inbox</span>
+      <span class="text-body-md">No new jobs to triage.</span>
     </div>
   {% else %}
     <div class="flex flex-col gap-md max-w-reading">
@@ -57,9 +57,9 @@
     <span class="text-body-md text-on-surface-variant">{{ to_apply|length }} accepted, not yet applied</span>
   </div>
   {% if not to_apply %}
-    <div class="flex flex-col items-center justify-center py-lg bg-surface-container-lowest border border-outline-variant rounded-xl text-on-surface-variant gap-sm max-w-reading">
-      <span class="material-symbols-outlined text-4xl text-outline-variant">checklist</span>
-      <p class="text-body-md">Nothing waiting. Accept jobs from the Inbox to add them here.</p>
+    <div class="flex items-center gap-sm px-md py-sm text-on-surface-variant max-w-reading">
+      <span class="material-symbols-outlined text-base text-outline">checklist</span>
+      <span class="text-body-md">Nothing waiting. Accept jobs from the Inbox to add them here.</span>
     </div>
   {% else %}
     <div class="flex flex-col gap-md max-w-reading">
