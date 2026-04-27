@@ -234,6 +234,22 @@ class JobClassification:
     classifier_reasoning: str
 
 
+def _expanded_text(tweet: dict[str, Any]) -> str:
+    """Tweet text with t.co shortlinks rewritten to their expanded URLs.
+
+    The classifier uses this so it can return real apply URLs (e.g.
+    jobs.ashbyhq.com/...) instead of opaque t.co shortlinks.
+    """
+    text = tweet.get("text", "") or ""
+    entities = tweet.get("entities") or {}
+    for entry in entities.get("urls") or []:
+        short = entry.get("url")
+        expanded = entry.get("expanded_url")
+        if short and expanded and short in text:
+            text = text.replace(short, expanded)
+    return text
+
+
 def _format_tweet_block(
     tweet: dict[str, Any],
     author: dict[str, Any],
@@ -254,10 +270,10 @@ def _format_tweet_block(
     if len(thread_tweets) > 1:
         lines.append(f"THREAD ({len(thread_tweets)} tweets, in order):")
         for i, t in enumerate(thread_tweets, 1):
-            lines.append(f"  [{i}] {t.get('text', '')}")
+            lines.append(f"  [{i}] {_expanded_text(t)}")
     else:
         lines.append("TWEET:")
-        lines.append(f"  {tweet.get('text', '')}")
+        lines.append(f"  {_expanded_text(tweet)}")
     return "\n".join(lines)
 
 

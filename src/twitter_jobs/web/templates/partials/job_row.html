@@ -43,12 +43,13 @@
     <div class="flex items-center justify-between gap-md pl-[64px] mt-xs flex-wrap">
       <div class="flex items-center gap-md text-body-md text-on-surface-variant min-w-0">
         <span class="truncate">@{{ tweet.author.username }} · {{ tweet.created_at.strftime("%b %-d, %Y") }}</span>
-        <a href="https://x.com/{{ tweet.author.username }}/status/{{ tweet.tweet_id }}" target="_blank" rel="noopener" class="text-primary hover:underline text-label-md flex items-center gap-xs">
+        <a href="https://x.com/{{ tweet.author.username }}/status/{{ tweet.tweet_id }}" target="_blank" rel="noopener" class="text-on-surface-variant hover:text-primary text-label-md flex items-center gap-xs">
           <span class="material-symbols-outlined text-base">open_in_new</span>View on X
         </a>
-        {% if job.apply_link %}
-          <a href="{{ job.apply_link }}" target="_blank" rel="noopener" class="text-primary hover:underline text-label-md flex items-center gap-xs">
-            <span class="material-symbols-outlined text-base">link</span>Apply
+        {% set apply_url = apply_url_for(job, tweet) %}
+        {% if apply_url %}
+          <a href="{{ apply_url }}" target="_blank" rel="noopener" class="px-md py-xs rounded-lg bg-primary text-on-primary text-label-md font-semibold hover:bg-primary/90 shadow-lift transition-colors flex items-center gap-xs">
+            <span class="material-symbols-outlined text-base">launch</span>Apply
           </a>
         {% endif %}
       </div>

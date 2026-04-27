@@ -38,6 +38,34 @@ ROLE_LABELS = {
     "unknown": "Unknown",
 }
 
+_TWITTER_HOSTS = ("twitter.com", "x.com", "t.co")
+
+
+def _is_twitter_url(url: str | None) -> bool:
+    if not url:
+        return True
+    lower = url.lower()
+    return any(host in lower for host in _TWITTER_HOSTS)
+
+
+def apply_url_for(job: JobPosting, tweet: Tweet) -> str | None:
+    """Return the best 'Apply' destination for a job row.
+
+    The classifier sometimes stores a t.co shortened URL (or nothing) as
+    apply_link. Prefer the expanded_url from the tweet's entities so the
+    button goes to the real careers page (Ashby, Greenhouse, the company
+    site, etc.) instead of the X tweet itself. Skip URLs that point back
+    to Twitter/X.
+    """
+    entities = tweet.entities or {}
+    for entry in entities.get("urls") or []:
+        expanded = entry.get("expanded_url")
+        if expanded and not _is_twitter_url(expanded):
+            return expanded
+    if job.apply_link and not _is_twitter_url(job.apply_link):
+        return job.apply_link
+    return None
+
 
 def build_router(templates: Jinja2Templates) -> APIRouter:
     router = APIRouter()
@@ -52,6 +80,7 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
                 "role_labels": ROLE_LABELS,
                 "industry_labels": INDUSTRY_LABELS,
                 "priority_for": get_priority,
+                "apply_url_for": apply_url_for,
             },
         )
 
@@ -113,6 +142,7 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
                 "role_labels": ROLE_LABELS,
                 "industry_labels": INDUSTRY_LABELS,
                 "priority_for": get_priority,
+                "apply_url_for": apply_url_for,
                 "p1_industries": p1_industries,
                 "p2_industries": p2_industries,
                 "active_role": role,
@@ -145,6 +175,7 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
                 "role_labels": ROLE_LABELS,
                 "industry_labels": INDUSTRY_LABELS,
                 "priority_for": get_priority,
+                "apply_url_for": apply_url_for,
                 "active_role": role,
                 "active_statuses": statuses,
                 "active_days": days,
