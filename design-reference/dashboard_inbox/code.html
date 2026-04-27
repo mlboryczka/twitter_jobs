@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Twitter Jobs - Inbox Dashboard</title>
+<!-- Google Fonts & Material Symbols -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#eff4ff",
+                        "surface-container-high": "#dce9ff",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-dim": "#cbdbf5",
+                        "outline": "#6f7883",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#99cbff",
+                        "on-primary-fixed": "#001d33",
+                        "inverse-surface": "#213145",
+                        "on-secondary-fixed": "#002113",
+                        "on-background": "#0b1c30",
+                        "surface-tint": "#00629d",
+                        "outline-variant": "#bfc7d3",
+                        "tertiary-fixed-dim": "#ffb3b6",
+                        "on-error-container": "#93000a",
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary": "#00629d",
+                        "secondary-container": "#6cf8bb",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#003050",
+                        "primary-fixed-dim": "#99cbff",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#be0037",
+                        "secondary-fixed-dim": "#4edea3",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#1d9bf0",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-tertiary-container": "#630018",
+                        "on-primary-fixed-variant": "#004a78",
+                        "surface-container": "#e5eeff",
+                        "on-secondary-container": "#00714d",
+                        "background": "#f8f9ff",
+                        "secondary": "#006c49",
+                        "surface": "#f8f9ff",
+                        "on-surface-variant": "#3f4851",
+                        "tertiary-container": "#ff5c6f",
+                        "primary-fixed": "#cfe5ff",
+                        "tertiary-fixed": "#ffdada",
+                        "surface-bright": "#f8f9ff",
+                        "on-surface": "#0b1c30",
+                        "on-tertiary-fixed": "#40000c",
+                        "surface-variant": "#d3e4fe",
+                        "on-tertiary-fixed-variant": "#920028"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "lg": "24px",
+                        "base": "8px",
+                        "xs": "4px",
+                        "xl": "40px",
+                        "sm": "8px",
+                        "container-max": "1280px",
+                        "gutter": "20px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "h3": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "h1": ["Inter"],
+                        "h2": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "h3": ["20px", { "lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "h1": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "h2": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "1", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased min-h-screen">
+<!-- TopNavBar -->
+<nav class="bg-white dark:bg-slate-900 font-sans antialiased text-sm font-medium docked full-width top-0 border-b-2 border-slate-200 dark:border-slate-800 shadow-md dark:shadow-none fixed top-0 w-full z-50 flex items-center justify-between px-8 h-16">
+<!-- Left: Brand & Search -->
+<div class="flex items-center gap-lg">
+<span class="text-xl font-black text-blue-500 dark:text-blue-400">Twitter Jobs</span>
+<div class="relative hidden md:block w-64 ml-md">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-full py-sm pl-[32px] pr-md font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="Search jobs, candidates..." type="text"/>
+</div>
+</div>
+<!-- Center: Nav Links (Web) -->
+<div class="hidden md:flex items-center h-full gap-lg">
+<a class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-4 h-full flex items-end cursor-pointer active:opacity-80" href="#">Dashboard</a>
+<a class="text-slate-500 dark:text-slate-400 pb-4 hover:text-blue-500 dark:hover:text-blue-300 transition-colors h-full flex items-end cursor-pointer active:opacity-80" href="#">Review</a>
+<a class="text-slate-500 dark:text-slate-400 pb-4 hover:text-blue-500 dark:hover:text-blue-300 transition-colors h-full flex items-end cursor-pointer active:opacity-80" href="#">All History</a>
+<a class="text-slate-500 dark:text-slate-400 pb-4 hover:text-blue-500 dark:hover:text-blue-300 transition-colors h-full flex items-end cursor-pointer active:opacity-80" href="#">Training</a>
+</div>
+<!-- Right: Actions -->
+<div class="flex items-center gap-md">
+<button class="text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors cursor-pointer active:opacity-80 p-xs rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<button class="text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors cursor-pointer active:opacity-80 p-xs rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+<img alt="User profile" class="w-[32px] h-[32px] rounded-full object-cover border border-outline-variant cursor-pointer" data-alt="close up professional headshot of woman with dark hair in bright studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWYjG0bl-SB5Jb59WC92VSVXh8DTSEPNDjihQQ8TJhKQypwdRAKEt_oLv3AMBUGxt14Lo3qBu6V8lKwEif7t1xwKWbsQEuOQb0ja3lNoChHHzTDk3L7F_qTAOj8SR5ezfVdesq6mpY80lvljEnmaivq_2HSwqIbTAN-bues8-Dx1BB0gj9ASourSbZjiG-tvsekOZSPIbePu41XFjtBLIi9l_M3SOewrB9KB_KqFKg2Kv2-D5ZjJLcjlxpbeELpHx0MQRlvvjw4R4N"/>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="pt-[80px] p-xl max-w-container-max mx-auto min-h-screen flex flex-col gap-lg">
+<!-- Header & Filters -->
+<header class="flex flex-col gap-md">
+<div>
+<h1 class="font-h1 text-h1 text-on-background">Triage Inbox</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Triage incoming job signals from your network.</p>
+</div>
+<div class="flex flex-wrap items-center gap-sm mt-sm">
+<button class="bg-on-background text-background font-label-md text-label-md px-md py-sm rounded-full shadow-sm transition-all hover:opacity-90">All Jobs</button>
+<select class="bg-surface-container-lowest border border-outline-variant text-on-surface-variant font-label-md text-label-md px-md py-[6px] rounded-full hover:bg-surface-container-low transition-colors focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+<option disabled="" selected="">Priority</option>
+<option>All Priorities</option>
+<option>P1 Urgent</option>
+<option>P2</option>
+<option>P3</option>
+</select>
+<select class="bg-surface-container-lowest border border-outline-variant text-on-surface-variant font-label-md text-label-md px-md py-[6px] rounded-full hover:bg-surface-container-low transition-colors focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+<option disabled="" selected="">Role</option>
+<option>All Roles</option>
+<option>Fintech</option>
+<option>SaaS</option>
+<option>Engineering</option>
+<option>Design</option>
+</select>
+</div>
+</header>
+<!-- Triage Deck (Cards) -->
+<div class="flex flex-col gap-md w-full max-w-3xl">
+<!-- Card 1: Stripe -->
+<article class="bg-surface-container-lowest border-2 border-slate-200/80 dark:border-slate-700/80 rounded-xl p-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col gap-md relative">
+<!-- Card Header -->
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-md">
+<div class="w-[48px] h-[48px] rounded-lg bg-[#635BFF] flex items-center justify-center shadow-sm">
+<span class="font-h3 text-h3 text-white font-bold">S</span>
+</div>
+<div>
+<h2 class="font-h3 text-h3 text-on-background">Stripe</h2>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-xs mt-[2px]">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+                                San Francisco, CA (Hybrid)
+                            </p>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<span class="bg-error/10 text-error font-label-sm text-label-sm px-sm py-[4px] rounded-full uppercase tracking-wide border border-error/20 font-bold">P1 Fintech</span>
+<span class="bg-primary/10 text-primary font-label-sm text-label-sm px-sm py-[4px] rounded-full border border-primary/20">Backend Eng</span>
+</div>
+</div>
+<!-- Horizontal Rule -->
+<hr class="border-outline-variant/50"/>
+<!-- Tweet Content -->
+<div class="font-body-lg text-body-lg text-on-surface leading-relaxed pl-[64px]">
+                    "We are scaling the core payments team at Stripe. Looking for a senior backend engineer who loves distributed systems and high-throughput environments. DM me or apply below. High TC, massive impact."
+                </div>
+<!-- Footer / Actions -->
+<div class="flex items-center justify-between mt-sm pl-[64px]">
+<div class="flex items-center gap-sm">
+<img alt="Patrick Collison" class="w-[32px] h-[32px] rounded-full object-cover" data-alt="professional headshot of man with short hair smiling softly" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBm7WFXkLIXUCFPzoN9I576pYrrBn3NUNPQUz8dp9NsTjyMTQJiTXXvDoGqNpc61u7cRxWch6wsyKP4xPmtRUBJKppdXYH-0cKESYV60q7O_z51R9GiZhBExMEiZgfp3TYo3uXA3B1M-Q64nOTFU_xGo4F_Cw8i9OuG8xB4n4fOLID6gjA-5yKy1YpX5BzXBAMNGGsFcMP-rdHY3t8re6Wq4Sr0qh2C1dNOZeqx_M9-yyjAdjQ0X2Iamv7oixh9GDe4RxmDHC4GktAi"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-background">Patrick Collison</span>
+<span class="font-body-md text-[13px] text-outline">@patrickc · 2h ago</span>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="bg-error-container/50 text-on-error-container hover:bg-error-container px-lg py-sm rounded-lg font-label-md text-label-md transition-colors border border-error-container">
+                            Dismiss
+                        </button>
+<button class="bg-primary text-on-primary shadow-[0_2px_0_rgba(0,0,0,0.1)] hover:bg-primary/90 px-lg py-sm rounded-lg font-label-md text-label-md transition-all flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">check</span>
+                            Accept Lead
+                        </button>
+</div>
+</div>
+</article>
+<!-- Card 2: Linear -->
+<article class="bg-surface-container-lowest border-2 border-slate-200/80 dark:border-slate-700/80 rounded-xl p-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col gap-md relative">
+<!-- Card Header -->
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-md">
+<div class="w-[48px] h-[48px] rounded-lg bg-[#5E6AD2] flex items-center justify-center shadow-sm">
+<span class="font-h3 text-h3 text-white font-bold">L</span>
+</div>
+<div>
+<h2 class="font-h3 text-h3 text-on-background">Linear</h2>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-xs mt-[2px]">
+<span class="material-symbols-outlined text-[16px]">public</span>
+                                Remote (US/EU)
+                            </p>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-sm py-[4px] rounded-full uppercase tracking-wide border border-outline-variant font-bold">P2 SaaS</span>
+<span class="bg-tertiary-container/30 text-on-tertiary-container font-label-sm text-label-sm px-sm py-[4px] rounded-full border border-tertiary-container/50">Product Design</span>
+</div>
+</div>
+<!-- Horizontal Rule -->
+<hr class="border-outline-variant/50"/>
+<!-- Tweet Content -->
+<div class="font-body-lg text-body-lg text-on-surface leading-relaxed pl-[64px]">
+                    "Linear is looking for a senior product designer. Come build the future of software development tools. Great eye for detail, strong systems thinking, and a passion for craft required. Portfolio link is a must."
+                </div>
+<!-- Footer / Actions -->
+<div class="flex items-center justify-between mt-sm pl-[64px]">
+<div class="flex items-center gap-sm">
+<img alt="Karri Saarinen" class="w-[32px] h-[32px] rounded-full object-cover" data-alt="artistic headshot of man with creative lighting in modern studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXdsGFlFtcObDF5b4rtV9mV8FI5jc9yjZmJwKuoDFlOnaVKo8g6rxSDv2nufoaoFBY66NIedOk3DkVpRHSwMebUdlzJwdcsr2pTNzYp6T-gX2CsWURpVppzMznemuZQRsfpwYwrQOWOMotpgV4Ff1uApQwJlPo7qsPFdfyYjBvuaT6Zn3awaY7u_rGQxc5o1O2EGnnulgiSmpY4X54-6GWS9JuJFaL0fDTb1Zs4iwpiKIMTk49fNSBzs-tP-KDxjzIls5YjYFXUmxa"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-background">Karri Saarinen</span>
+<span class="font-body-md text-[13px] text-outline">@karrisaarinen · 5h ago</span>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="bg-error-container/50 text-on-error-container hover:bg-error-container px-lg py-sm rounded-lg font-label-md text-label-md transition-colors border border-error-container">
+                            Dismiss
+                        </button>
+<button class="bg-primary text-on-primary shadow-[0_2px_0_rgba(0,0,0,0.1)] hover:bg-primary/90 px-lg py-sm rounded-lg font-label-md text-label-md transition-all flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">check</span>
+                            Accept Lead
+                        </button>
+</div>
+</div>
+</article>
+</div>
+</main>
+</body></html>

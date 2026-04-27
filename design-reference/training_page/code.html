@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Training - Twitter Jobs</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts & Material Symbols -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#eff4ff",
+                    "surface-container-high": "#dce9ff",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-dim": "#cbdbf5",
+                    "outline": "#6f7883",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "inverse-primary": "#99cbff",
+                    "on-primary-fixed": "#001d33",
+                    "inverse-surface": "#213145",
+                    "on-secondary-fixed": "#002113",
+                    "on-background": "#0b1c30",
+                    "surface-tint": "#00629d",
+                    "outline-variant": "#bfc7d3",
+                    "tertiary-fixed-dim": "#ffb3b6",
+                    "on-error-container": "#93000a",
+                    "inverse-on-surface": "#eaf1ff",
+                    "primary": "#00629d",
+                    "secondary-container": "#6cf8bb",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#003050",
+                    "primary-fixed-dim": "#99cbff",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#be0037",
+                    "secondary-fixed-dim": "#4edea3",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "primary-container": "#1d9bf0",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-tertiary-container": "#630018",
+                    "on-primary-fixed-variant": "#004a78",
+                    "surface-container": "#e5eeff",
+                    "on-secondary-container": "#00714d",
+                    "background": "#f8f9ff",
+                    "secondary": "#006c49",
+                    "surface": "#f8f9ff",
+                    "on-surface-variant": "#3f4851",
+                    "tertiary-container": "#ff5c6f",
+                    "primary-fixed": "#cfe5ff",
+                    "tertiary-fixed": "#ffdada",
+                    "surface-bright": "#f8f9ff",
+                    "on-surface": "#0b1c30",
+                    "on-tertiary-fixed": "#40000c",
+                    "surface-variant": "#d3e4fe",
+                    "on-tertiary-fixed-variant": "#920028"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "lg": "24px",
+                    "base": "8px",
+                    "xs": "4px",
+                    "xl": "40px",
+                    "sm": "8px",
+                    "container-max": "1280px",
+                    "gutter": "20px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "h3": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "h1": ["Inter"],
+                    "h2": ["Inter"],
+                    "label-md": ["Inter"]
+            },
+            "fontSize": {
+                    "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "1", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 flex items-center justify-between px-8 h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none font-sans antialiased text-sm font-medium">
+<div class="flex items-center gap-6">
+<div class="text-xl font-black text-blue-500 dark:text-blue-400">Twitter Jobs</div>
+<div class="hidden md:flex relative items-center ml-4">
+<span class="material-symbols-outlined absolute left-3 text-slate-400 text-[20px]" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-sm focus:ring-2 focus:ring-blue-500 outline-none w-64" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="hidden lg:flex items-end h-full gap-8">
+<a class="text-slate-500 dark:text-slate-400 pb-4 h-full flex items-end hover:text-blue-500 dark:hover:text-blue-300 transition-colors cursor-pointer active:opacity-80" href="#">Dashboard</a>
+<a class="text-slate-500 dark:text-slate-400 pb-4 h-full flex items-end hover:text-blue-500 dark:hover:text-blue-300 transition-colors cursor-pointer active:opacity-80" href="#">Review</a>
+<a class="text-slate-500 dark:text-slate-400 pb-4 h-full flex items-end hover:text-blue-500 dark:hover:text-blue-300 transition-colors cursor-pointer active:opacity-80" href="#">All History</a>
+<a class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-4 h-full flex items-end cursor-pointer active:opacity-80" href="#">Training</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-slate-500 hover:text-blue-500 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-slate-500 hover:text-blue-500 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-slate-300 overflow-hidden border border-slate-200">
+<img alt="User profile" class="h-full w-full object-cover" data-alt="Close up portrait photo of a professional young man with a neutral expression, softly lit against a blurred gray background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCr1fylKnxkeuXixOvFq_PTqpZFWF_wMOBczlnZdMltnM1CacEyBXwmr4vSqXPxu_Cx2y6HmHZKhVAdM3c8lmTZQvAk4lTrgt6RqJdo2j3xRnquAibLo-X7ALR_SBIRSYBCcvKROSRDYEOoi0-rywJNHxZtXPBMdrrQu1L7avx72uXEqQ87uI-s8r4Dbk8SK5HZwC6S2r6waw7c0gH34Ua7538wy3zSHEWnroYdfhnAK5kT8MphzSDUVfX89GIATov6QfOtZnACtgjU"/>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="pt-16 min-h-screen p-8 max-w-container-max mx-auto">
+<div class="mb-8 flex justify-between items-end">
+<div>
+<h1 class="font-h1 text-h1 text-on-surface mb-2">Model Training Studio</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Feed high-quality examples to improve the automated candidate triage classifier.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors">
+                    Guidelines
+                </button>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+<!-- Left Column: Input Form (Spans 8 cols) -->
+<div class="xl:col-span-12 flex flex-col gap-6">
+<!-- Upload Zone -->
+<div class="bg-surface-container-lowest border-2 border-outline-variant rounded-xl p-1 overflow-hidden shadow-md">
+<div class="border-2 border-dashed border-outline-variant rounded-lg bg-surface-container-low/50 hover:bg-surface-container-low transition-colors cursor-pointer flex flex-col items-center justify-center py-16 px-6 text-center group">
+<div class="h-16 w-16 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">cloud_upload</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface mb-1">Drag &amp; Drop Screenshot</h3>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md">Upload a clear screenshot of the candidate profile or resume snippet. PNG or JPG up to 5MB.</p>
+</div>
+</div>
+<!-- Training Form -->
+<div class="bg-surface-container-lowest border-2 border-outline-variant rounded-xl p-8 shadow-md">
+<h2 class="font-h2 text-h2 text-on-surface mb-6">Annotation Details</h2>
+<form class="space-y-6">
+<!-- Decision Radio/Chips -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-3">Classifier Decision</label>
+<div class="flex flex-wrap gap-3">
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="decision" type="radio" value="accept"/>
+<div class="px-6 py-3 rounded-lg border border-outline-variant bg-surface font-label-md text-label-md text-on-surface-variant peer-checked:border-secondary peer-checked:bg-secondary-container peer-checked:text-on-secondary-container transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                        Accept
+                                    </div>
+</label>
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="decision" type="radio" value="reject"/>
+<div class="px-6 py-3 rounded-lg border border-outline-variant bg-surface font-label-md text-label-md text-on-surface-variant peer-checked:border-error peer-checked:bg-error-container peer-checked:text-on-error-container transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+                                        Dismiss
+                                    </div>
+</label>
+<label class="cursor-pointer relative">
+<input checked="" class="peer sr-only" name="decision" type="radio" value="undecided"/>
+<div class="px-6 py-3 rounded-lg border border-outline-variant bg-surface font-label-md text-label-md text-on-surface-variant peer-checked:border-primary peer-checked:bg-primary-container peer-checked:text-on-primary-container transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">help</span>
+                                        Requires Review
+                                    </div>
+</label>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2" for="role">Target Role</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-2.5 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-outline" id="role" placeholder="e.g. Senior Frontend Engineer" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2" for="industry">Industry Context</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-2.5 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-outline" id="industry" placeholder="e.g. FinTech, E-commerce" type="text"/>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2" for="reason">Why I picked this (Reasoning)</label>
+<textarea class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-y placeholder:text-outline" id="reason" placeholder="Explain the key indicators in the screenshot that led to your decision..." rows="4"></textarea>
+</div>
+<div class="pt-4 border-t border-surface-variant flex justify-end">
+<button class="px-6 py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-on-primary-fixed-variant transition-colors shadow-[0px_4px_12px_rgba(0,0,0,0.05)]" type="button">
+                                Submit Example to Model
+                            </button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- Bottom Grid: Recent Examples -->
+</main>
+</body></html>

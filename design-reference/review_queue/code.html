@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Review Queue - Twitter Jobs</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#eff4ff",
+                    "surface-container-high": "#dce9ff",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-dim": "#cbdbf5",
+                    "outline": "#6f7883",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "inverse-primary": "#99cbff",
+                    "on-primary-fixed": "#001d33",
+                    "inverse-surface": "#213145",
+                    "on-secondary-fixed": "#002113",
+                    "on-background": "#0b1c30",
+                    "surface-tint": "#00629d",
+                    "outline-variant": "#bfc7d3",
+                    "tertiary-fixed-dim": "#ffb3b6",
+                    "on-error-container": "#93000a",
+                    "inverse-on-surface": "#eaf1ff",
+                    "primary": "#00629d",
+                    "secondary-container": "#6cf8bb",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#003050",
+                    "primary-fixed-dim": "#99cbff",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#be0037",
+                    "secondary-fixed-dim": "#4edea3",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "primary-container": "#1d9bf0",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-tertiary-container": "#630018",
+                    "on-primary-fixed-variant": "#004a78",
+                    "surface-container": "#e5eeff",
+                    "on-secondary-container": "#00714d",
+                    "background": "#f8f9ff",
+                    "secondary": "#006c49",
+                    "surface": "#f8f9ff",
+                    "on-surface-variant": "#3f4851",
+                    "tertiary-container": "#ff5c6f",
+                    "primary-fixed": "#cfe5ff",
+                    "tertiary-fixed": "#ffdada",
+                    "surface-bright": "#f8f9ff",
+                    "on-surface": "#0b1c30",
+                    "on-tertiary-fixed": "#40000c",
+                    "surface-variant": "#d3e4fe",
+                    "on-tertiary-fixed-variant": "#920028"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "lg": "24px",
+                    "base": "8px",
+                    "xs": "4px",
+                    "xl": "40px",
+                    "sm": "8px",
+                    "container-max": "1280px",
+                    "gutter": "20px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "h3": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "h1": ["Inter"],
+                    "h2": ["Inter"],
+                    "label-md": ["Inter"]
+            },
+            "fontSize": {
+                    "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "1", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-8 h-16 bg-surface-container-lowest border-b border-outline-variant shadow-sm font-label-md text-label-md">
+<div class="flex items-center gap-lg">
+<span class="font-h3 text-h3 font-bold text-primary">Twitter Jobs</span>
+<!-- Search Bar on Left as per JSON logic -->
+<div class="hidden md:flex items-center bg-surface-container-low rounded-full px-4 py-2 border border-outline-variant focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<span class="material-symbols-outlined text-on-surface-variant text-lg mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md text-on-surface placeholder-on-surface-variant w-64 p-0" placeholder="Search handles or keywords..." type="text"/>
+</div>
+</div>
+<!-- TopNav Links (Visible on desktop if SideNav is collapsed, but keeping SideNav primary here) -->
+<nav class="hidden lg:flex items-center gap-lg h-full">
+<a class="text-on-surface-variant pb-4 pt-5 hover:text-primary transition-colors cursor-pointer active:opacity-80" href="#">Dashboard</a>
+<a class="text-primary border-b-2 border-primary pb-[14px] pt-5 hover:text-primary transition-colors cursor-pointer active:opacity-80" href="#">Review</a>
+<a class="text-on-surface-variant pb-4 pt-5 hover:text-primary transition-colors cursor-pointer active:opacity-80" href="#">All History</a>
+<a class="text-on-surface-variant pb-4 pt-5 hover:text-primary transition-colors cursor-pointer active:opacity-80" href="#">Training</a>
+</nav>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<img alt="User profile" class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="professional headshot of a man with short brown hair smiling softly against a light grey background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4JAJS8iwstw9-h__9rnJsKPOzoV3R34r1WdO-acDK73Eqq5tEKQuh--8v2O5IoUXe7onna1fwwSBhGa8zLP1bVGYeEDSRvFXv2opQuBu_rC6wzIlRTlFj-SjsJNftdgxJYIRnfpPDLe7-W09zKmEvYTUiwSNNImkips3Vw0mTys3efnR2kfcPY0nA12Rx3GEMKdEKMvttFAlOd_x9VdYpPOqFPRFd4xF-yvjRBWcbAK0UJBKsYBUAFDoYuYjsrz3kyaEx1UDj-IoB"/>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 mt-20 mb-8 mx-8 p-lg xl:p-xl bg-surface-container-lowest border border-outline/30 shadow-md rounded-2xl min-h-[calc(100vh-7rem)]">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-lg">
+<div>
+<h1 class="font-h1 text-h1 text-on-background">Manual Review Queue</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-tertiary">error</span>
+                    Classifier unable to confidently extract structured data for these items.
+                </p>
+</div>
+<div class="flex items-center gap-3 bg-surface-container-lowest px-4 py-2 rounded-lg border border-outline/30 shadow-md">
+<span class="font-label-md text-label-md text-on-surface-variant">Pending Queue:</span>
+<span class="font-h3 text-h3 text-primary bg-surface-container-low px-2 py-1 rounded">24</span>
+</div>
+</div>
+<!-- Triage Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-lg">
+<!-- Item 1 -->
+<article class="bg-surface-container-lowest border border-outline/30 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden flex flex-col">
+<div class="aspect-[4/3] bg-surface-container relative group border-b border-outline-variant">
+<img alt="Tweet screenshot preview" class="w-full h-full object-cover object-top opacity-90" data-alt="screenshot of a twitter post on a smartphone screen showing text about hiring a senior frontend developer with a link below" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdrsvZh_pv45YLx6ut_UEk2g3c3T-GHYUWg0x1Fqp8vA8NOdHxD6jwDfQ89ZTyJpflVL2Wv_hf0je93N8uYKBN6L7Z3-pXdV0nMBBFrVLRIYbxEKPPcUGxgp5v49WWtYLaSoiaEK57r4UeZ9CYD-PHsaSEY4mx1pdCHzH77c5NvES1yDuZ6BliSo0ULA_7szcuMrYzJE1QUQzwVWKERbshTa31hI15S7akirycgnH8xz7htSCXrgEEIdLlfDawkOSBTYGpUM-kSbq2"/>
+<div class="absolute top-3 left-3 bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm px-2 py-1 rounded flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                        Low Confidence
+                    </div>
+</div>
+<div class="p-lg flex flex-col flex-1 gap-md">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="professional portrait of a woman looking confident with a slight smile wearing a blazer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXBrbvDpiJXc_Ng2UyDeuBlaa6-PUQO5Q00qwToNxeWWCn0tyANoRUJ2CyIupNOASBY5x2mvniALACleu-SS5M-4aCAv8nVooenTfvYms_lfccZfVz3ybeGhZu0JoYFQiTyJTcDilLdBLNdBZgz29qOrBKWED-R4HItnIX43NRN7QFVJwKy3BSwgUQ5hrHWWKwojeIR1vTZ84GRW9MhFhTCkvLsMMiLDi5FrT5RxsuOnZc5x-k5PwYHkcZ6fygJXGXcgVjeo0msMGA"/>
+<div>
+<p class="font-label-md text-label-md text-on-background leading-tight">Sarah Jenkins</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs">@sarahcodes</p>
+</div>
+<a class="ml-auto text-primary hover:bg-surface-container-low p-2 rounded-full transition-colors" href="#" title="View Original">
+<span class="material-symbols-outlined text-xl">open_in_new</span>
+</a>
+</div>
+<hr class="border-outline-variant/50"/>
+<div class="flex flex-col gap-3 flex-1">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Assign Role</label>
+<select class="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm">
+<option disabled="" selected="" value="">Select Role...</option>
+<option value="eng">Software Engineer</option>
+<option value="des">Product Designer</option>
+<option value="pm">Product Manager</option>
+<option value="data">Data Scientist</option>
+</select>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Assign Industry</label>
+<select class="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm">
+<option disabled="" selected="" value="">Select Industry...</option>
+<option value="tech">Technology / SaaS</option>
+<option value="fin">Fintech</option>
+<option value="health">Healthcare</option>
+<option value="ecom">E-commerce</option>
+</select>
+</div>
+</div>
+<div class="flex gap-sm mt-2">
+<button class="flex-1 bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md py-2.5 rounded-lg border border-tertiary-fixed-dim hover:bg-tertiary-fixed-dim transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">close</span>
+                            Dismiss
+                        </button>
+<button class="flex-1 bg-primary text-on-primary font-label-md text-label-md py-2.5 rounded-lg hover:shadow-md transition-all shadow-[0px_2px_4px_rgba(0,0,0,0.1)] flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">check</span>
+                            Accept
+                        </button>
+</div>
+</div>
+</article>
+<!-- Item 2 -->
+<article class="bg-surface-container-lowest border border-outline/30 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden flex flex-col">
+<div class="aspect-[4/3] bg-surface-container relative group border-b border-outline-variant">
+<img alt="Tweet screenshot preview" class="w-full h-full object-cover object-top opacity-90" data-alt="screenshot showing a casual tweet about looking for freelance design work with a colorful geometric background image attached" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrAL0S0BLBnT3CJA-BOL9R9ycLYolqIl500g5EhxV4jqa9RvNbYtIwjEWLi-JaqXhmO02-FHcW2YY-9TxG6wSDq8imUK0W9sQUj8D3zFdJUp2-B7bAX9wXtlmVZgpKLcpp5U5FU4zCQmAiIs3FS_JpsLMoYCREjpEr3XpmYaOWmk_PbTJXBjtQUoqbFKolcO_CBke5KJ4gq3t33tZ8jKS9c1FFhV_eL4L6YKGQ8jQjMsBri3G_0y68bNEqXYPlONPz8NPZ6gWs2q3R"/>
+<div class="absolute top-3 left-3 bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm px-2 py-1 rounded flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                        Missing Data
+                    </div>
+</div>
+<div class="p-lg flex flex-col flex-1 gap-md">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="close up portrait of a young man with glasses and a slight stubble looking directly at the camera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0HaGhUqYddJGfABwcCTTWd1wn5fJniiYEScxjarfrSYr6tOqc-hF-bOKiAIniOXsAxI9phHUAHOeBhbqL8acup6KSkn1hkQ_IdNF0wm4wm6aw77xoUgYykKyMx3MUwaXv7AbmVjar_byPOEL0YANZl4LIC2U87QSER8lxeo6KOXD9U-UbL6H9IGhN-NTOJCZvVYbBMlIKa2lg3wPVIcWh2-GBpuex7r-RLCbwxfm8DcQhMMVPbaBASpL1or3dUFOPC6T09qK2FgRz"/>
+<div>
+<p class="font-label-md text-label-md text-on-background leading-tight">Alex Rivera</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs">@arivera_design</p>
+</div>
+<a class="ml-auto text-primary hover:bg-surface-container-low p-2 rounded-full transition-colors" href="#" title="View Original">
+<span class="material-symbols-outlined text-xl">open_in_new</span>
+</a>
+</div>
+<hr class="border-outline-variant/50"/>
+<div class="flex flex-col gap-3 flex-1">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Assign Role</label>
+<select class="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm">
+<option disabled="" value="">Select Role...</option>
+<option value="eng">Software Engineer</option>
+<option selected="" value="des">Product Designer</option>
+<option value="pm">Product Manager</option>
+<option value="data">Data Scientist</option>
+</select>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Assign Industry</label>
+<select class="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm">
+<option disabled="" selected="" value="">Select Industry...</option>
+<option value="tech">Technology / SaaS</option>
+<option value="fin">Fintech</option>
+<option value="agency">Creative Agency</option>
+<option value="ecom">E-commerce</option>
+</select>
+</div>
+</div>
+<div class="flex gap-sm mt-2">
+<button class="flex-1 bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md py-2.5 rounded-lg border border-tertiary-fixed-dim hover:bg-tertiary-fixed-dim transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">close</span>
+                            Dismiss
+                        </button>
+<button class="flex-1 bg-primary text-on-primary font-label-md text-label-md py-2.5 rounded-lg hover:shadow-md transition-all shadow-[0px_2px_4px_rgba(0,0,0,0.1)] flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">check</span>
+                            Accept
+                        </button>
+</div>
+</div>
+</article>
+<!-- Item 3 -->
+<article class="bg-surface-container-lowest border border-outline/30 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden flex flex-col">
+<div class="aspect-[4/3] bg-surface-container relative group border-b border-outline-variant flex items-center justify-center bg-surface-container-low">
+<!-- Simulating a text-heavy tweet without a clear image -->
+<div class="p-4 text-center">
+<span class="material-symbols-outlined text-4xl text-outline-variant mb-2">article</span>
+<p class="font-body-md text-body-md text-on-surface-variant italic">"We are expanding our core team. DMs open for interesting folks in data..."</p>
+</div>
+<div class="absolute top-3 left-3 bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm px-2 py-1 rounded flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                        Ambiguous
+                    </div>
+</div>
+<div class="p-lg flex flex-col flex-1 gap-md">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold border border-outline-variant">
+                            MC
+                        </div>
+<div>
+<p class="font-label-md text-label-md text-on-background leading-tight">Metro Corp</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs">@metro_careers</p>
+</div>
+<a class="ml-auto text-primary hover:bg-surface-container-low p-2 rounded-full transition-colors" href="#" title="View Original">
+<span class="material-symbols-outlined text-xl">open_in_new</span>
+</a>
+</div>
+<hr class="border-outline-variant/50"/>
+<div class="flex flex-col gap-3 flex-1">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Assign Role</label>
+<select class="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm">
+<option disabled="" value="">Select Role...</option>
+<option value="eng">Software Engineer</option>
+<option value="des">Product Designer</option>
+<option value="pm">Product Manager</option>
+<option selected="" value="data">Data Scientist</option>
+</select>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Assign Industry</label>
+<select class="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm">
+<option disabled="" selected="" value="">Select Industry...</option>
+<option value="tech">Technology / SaaS</option>
+<option value="fin">Fintech</option>
+<option value="health">Healthcare</option>
+<option value="corp">Corporate/Enterprise</option>
+</select>
+</div>
+</div>
+<div class="flex gap-sm mt-2">
+<button class="flex-1 bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md py-2.5 rounded-lg border border-tertiary-fixed-dim hover:bg-tertiary-fixed-dim transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">close</span>
+                            Dismiss
+                        </button>
+<button class="flex-1 bg-primary text-on-primary font-label-md text-label-md py-2.5 rounded-lg hover:shadow-md transition-all shadow-[0px_2px_4px_rgba(0,0,0,0.1)] flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">check</span>
+                            Accept
+                        </button>
+</div>
+</div>
+</article>
+</div>
+</main>
+</body></html>
