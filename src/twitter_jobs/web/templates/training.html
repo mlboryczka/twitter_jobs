@@ -2,7 +2,7 @@
 {% block title %}Training — twitter_jobs{% endblock %}
 
 {% block content %}
-<header class="flex flex-col gap-xs max-w-reading">
+<header class="flex flex-col gap-xs w-full">
   <h1 class="text-h1 text-on-background">Training</h1>
   <p class="text-body-md text-on-surface-variant">
     Drop a screenshot of an X post that's a strong example for what you do or don't want.
@@ -10,7 +10,7 @@
   </p>
 </header>
 
-<form method="post" action="/training" enctype="multipart/form-data" class="flex flex-col gap-lg max-w-reading">
+<form method="post" action="/training" enctype="multipart/form-data" class="flex flex-col gap-lg w-full">
   <label id="dropzone" class="block bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-xl p-xl text-center cursor-pointer hover:bg-surface-container-low transition-colors">
     <input type="file" name="screenshot" id="screenshot" accept="image/*" class="sr-only">
     <div class="flex flex-col items-center gap-sm">
@@ -91,7 +91,7 @@
   </div>
 </form>
 
-<section class="flex flex-col gap-md max-w-container-max">
+<section class="flex flex-col gap-md">
   <h2 class="text-h2 text-on-background">Saved examples ({{ examples|length }})</h2>
   {% if not examples %}
     <p class="text-body-md text-on-surface-variant"><em>None yet.</em></p>
