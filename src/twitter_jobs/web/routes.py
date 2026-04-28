@@ -5,15 +5,15 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import func, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 
 from twitter_jobs.classify.industries import (
-    AVOID,
     INDUSTRY_LABELS,
     PRIORITY_1,
     PRIORITY_2,
@@ -26,7 +26,8 @@ from twitter_jobs.classify.training import (
 )
 from twitter_jobs.db.models import ApiCall, JobPosting, TrainingExample, Tweet, WorkerState
 from twitter_jobs.db.session import session_scope
-from twitter_jobs.ingest.feed_worker import LAST_PULL_SUMMARY_KEY
+from twitter_jobs.ingest.feed_worker import spam_dismiss_reason
+from twitter_jobs.ingest.search_worker import LAST_PULL_SUMMARY_KEY
 from twitter_jobs.web.auth import require_basic_auth
 
 ROLE_LABELS = {
@@ -92,8 +93,6 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         priority: str | None = None,
         _: str = Depends(require_basic_auth),
     ) -> HTMLResponse:
-        from twitter_jobs.ingest.feed_worker import spam_dismiss_reason
-
         def _author_dict(tweet: Tweet) -> dict[str, Any]:
             a = tweet.author
             if a is None:
@@ -325,7 +324,7 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
             try:
                 await session.execute(select(func.count()).select_from(JobPosting))
                 db_ok = True
-            except Exception:
+            except SQLAlchemyError:
                 db_ok = False
 
             last_pull_row = await session.get(WorkerState, LAST_PULL_SUMMARY_KEY)

@@ -18,15 +18,13 @@ from dataclasses import dataclass
 from typing import Any
 
 from anthropic import AsyncAnthropic
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
-from twitter_jobs.classify.industries import (
-    AVOID,
-    INDUSTRIES,
-    INDUSTRY_LABELS,
-    PRIORITY_1,
-    PRIORITY_2,
-)
+from twitter_jobs.classify.industries import INDUSTRIES
 from twitter_jobs.config import get_settings
+from twitter_jobs.db.models import JobPosting, TrainingExample, Tweet
+from twitter_jobs.db.session import session_scope
 
 logger = logging.getLogger(__name__)
 
@@ -295,11 +293,6 @@ async def _training_examples_block() -> str:
     rich reasoning attached — so we weight them slightly above the dashboard
     accept/dismiss feedback.
     """
-    from sqlalchemy import select
-
-    from twitter_jobs.db.models import TrainingExample
-    from twitter_jobs.db.session import session_scope
-
     async with session_scope() as session:
         stmt = (
             select(TrainingExample)
@@ -346,14 +339,7 @@ async def _user_feedback_block() -> str:
     """Pull the user's most-recent accept/dismiss decisions and format as examples.
 
     Empty string if there's no feedback yet — just relies on the static examples.
-    Imported lazily to avoid a circular import (classifier <- feedback <- db <- ...).
     """
-    from sqlalchemy import select
-    from sqlalchemy.orm import joinedload
-
-    from twitter_jobs.db.models import JobPosting, Tweet
-    from twitter_jobs.db.session import session_scope
-
     async with session_scope() as session:
         stmt = (
             select(JobPosting, Tweet)

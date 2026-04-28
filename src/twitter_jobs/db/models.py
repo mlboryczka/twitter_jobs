@@ -27,7 +27,6 @@ from sqlalchemy import (
     Integer,
     Numeric,
     PrimaryKeyConstraint,
-    String,
     Text,
     func,
 )
