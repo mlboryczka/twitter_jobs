@@ -30,6 +30,7 @@ from twitter_jobs.db.session import session_scope
 from twitter_jobs.ingest.common import spam_dismiss_reason
 from twitter_jobs.ingest.search_worker import LAST_PULL_SUMMARY_KEY
 from twitter_jobs.web.auth import require_basic_auth
+from twitter_jobs.x_api.types import XAuthor
 
 _TWITTER_HOSTS = ("twitter.com", "x.com", "t.co")
 
@@ -85,15 +86,15 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
         priority: str | None = None,
         _: str = Depends(require_basic_auth),
     ) -> HTMLResponse:
-        def _author_dict(tweet: Tweet) -> dict[str, Any]:
+        def _author_dict(tweet: Tweet) -> XAuthor:
             a = tweet.author
             if a is None:
                 return {}
-            return {
-                "verified": a.verified,
-                "description": a.description,
-                "public_metrics": a.public_metrics,
-            }
+            return XAuthor(
+                verified=a.verified,
+                description=a.description or "",
+                public_metrics=a.public_metrics or {},
+            )
 
         # Section 1: status='new' inbox (only items still needing triage).
         inbox = await _list_jobs(statuses=["new"], role=role, text_query=q)

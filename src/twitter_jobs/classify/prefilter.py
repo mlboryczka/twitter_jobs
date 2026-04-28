@@ -22,7 +22,8 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any
+
+from twitter_jobs.x_api.types import XAuthor, XTweet
 
 # --- hiring-language patterns ---
 HIRING_PATTERNS = [
@@ -118,7 +119,7 @@ def _first_matches(text: str, patterns: list[re.Pattern[str]]) -> list[str]:
     return hits
 
 
-def _resolve_text(tweet: dict[str, Any], includes_tweets_by_id: dict[str, dict[str, Any]]) -> str:
+def _resolve_text(tweet: XTweet, includes_tweets_by_id: dict[str, XTweet]) -> str:
     """If this tweet is a retweet, return the referenced tweet's text."""
     ref = tweet.get("referenced_tweets") or []
     for r in ref:
@@ -130,10 +131,10 @@ def _resolve_text(tweet: dict[str, Any], includes_tweets_by_id: dict[str, dict[s
 
 
 def is_potential_job(
-    tweet: dict[str, Any],
-    author: dict[str, Any] | None,
+    tweet: XTweet,
+    author: XAuthor | None,
     *,
-    includes_tweets_by_id: dict[str, dict[str, Any]] | None = None,
+    includes_tweets_by_id: dict[str, XTweet] | None = None,
 ) -> PrefilterResult:
     """Pure function. Returns a PrefilterResult indicating whether to classify."""
     includes_tweets_by_id = includes_tweets_by_id or {}

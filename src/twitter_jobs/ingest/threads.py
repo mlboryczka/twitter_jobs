@@ -11,10 +11,10 @@ control cost.
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from twitter_jobs.x_api.client import XClient
 from twitter_jobs.x_api.endpoints import search_recent
+from twitter_jobs.x_api.types import XAuthor, XTweet
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +23,9 @@ MAX_THREAD_TWEETS = 20
 
 async def reconstruct_thread(
     client: XClient,
-    tweet: dict[str, Any],
-    author: dict[str, Any],
-) -> list[dict[str, Any]]:
+    tweet: XTweet,
+    author: XAuthor,
+) -> list[XTweet]:
     """Return an ordered list of thread tweets (head first) or [tweet] if not a thread."""
     conversation_id = tweet.get("conversation_id")
     tweet_id = tweet.get("id")
@@ -33,7 +33,6 @@ async def reconstruct_thread(
     if not (conversation_id and tweet_id and username):
         return [tweet]
     if conversation_id != tweet_id:
-        # Not the head of a thread.
         return [tweet]
 
     query = f"conversation_id:{conversation_id} from:{username}"
@@ -44,8 +43,7 @@ async def reconstruct_thread(
         return [tweet]
 
     data = payload.get("data") or []
-    # Ensure the head tweet is present, then order by id ascending (older → newer).
-    by_id: dict[str, dict[str, Any]] = {t["id"]: t for t in data}
+    by_id: dict[str, XTweet] = {t["id"]: t for t in data}
     by_id.setdefault(tweet_id, tweet)
     ordered = sorted(by_id.values(), key=lambda t: _id_key(t["id"]))
     return ordered[:MAX_THREAD_TWEETS]

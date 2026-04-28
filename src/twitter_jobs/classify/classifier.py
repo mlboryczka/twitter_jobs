@@ -25,6 +25,7 @@ from twitter_jobs.classify.industries import INDUSTRIES, ROLE_CATEGORIES, SENIOR
 from twitter_jobs.config import get_settings
 from twitter_jobs.db.models import JobPosting, TrainingExample, Tweet
 from twitter_jobs.db.session import session_scope
+from twitter_jobs.x_api.types import XAuthor, XTweet
 
 logger = logging.getLogger(__name__)
 
@@ -229,7 +230,7 @@ class JobClassification:
     classifier_reasoning: str
 
 
-def _expanded_text(tweet: dict[str, Any]) -> str:
+def _expanded_text(tweet: XTweet) -> str:
     """Tweet text with t.co shortlinks rewritten to their expanded URLs.
 
     The classifier uses this so it can return real apply URLs (e.g.
@@ -246,9 +247,9 @@ def _expanded_text(tweet: dict[str, Any]) -> str:
 
 
 def _format_tweet_block(
-    tweet: dict[str, Any],
-    author: dict[str, Any],
-    thread_tweets: list[dict[str, Any]],
+    tweet: XTweet,
+    author: XAuthor,
+    thread_tweets: list[XTweet],
 ) -> str:
     """Turn tweet + thread + author into a single string the model sees."""
     lines = []
@@ -389,9 +390,9 @@ async def _user_feedback_block() -> str:
 
 
 async def classify(
-    tweet: dict[str, Any],
-    author: dict[str, Any],
-    thread_tweets: list[dict[str, Any]] | None = None,
+    tweet: XTweet,
+    author: XAuthor,
+    thread_tweets: list[XTweet] | None = None,
     *,
     client: AsyncAnthropic | None = None,
 ) -> JobClassification | None:

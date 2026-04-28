@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 import re
 from datetime import datetime
-from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -27,6 +26,7 @@ from twitter_jobs.db.models import Author, JobPosting, Tweet, TweetSource, Worke
 from twitter_jobs.db.session import session_scope
 from twitter_jobs.ingest.threads import reconstruct_thread
 from twitter_jobs.x_api.client import XClient
+from twitter_jobs.x_api.types import XAuthor, XIncludes, XTweet
 
 logger = logging.getLogger(__name__)
 
@@ -61,13 +61,7 @@ SPAM_BIO_PATTERNS = [
 ]
 
 
-def _author_followers_count(author: dict[str, Any]) -> int | None:
-    metrics = author.get("public_metrics") or {}
-    val = metrics.get("followers_count")
-    return int(val) if val is not None else None
-
-
-def spam_dismiss_reason(author: dict[str, Any]) -> str | None:
+def spam_dismiss_reason(author: XAuthor) -> str | None:
     """Return a dismissal reason if the author looks like spam, else None.
 
     Order matters: we check the most precise signals first so the reason
@@ -109,16 +103,16 @@ def spam_dismiss_reason(author: dict[str, Any]) -> str | None:
 
 async def classify_new_tweets(
     client: XClient,
-    data: list[dict[str, Any]],
-    includes: dict[str, Any],
+    data: list[XTweet],
+    includes: XIncludes,
     new_ids: list[str],
 ) -> tuple[int, int]:
     """Run prefilter + classifier over newly-ingested tweets. Returns (jobs, manual_review)."""
     if not new_ids:
         return 0, 0
 
-    users_by_id = {u["id"]: u for u in includes.get("users") or []}
-    ref_tweets_by_id = {t["id"]: t for t in includes.get("tweets") or []}
+    users_by_id: dict[str, XAuthor] = {u["id"]: u for u in includes.get("users") or []}
+    ref_tweets_by_id: dict[str, XTweet] = {t["id"]: t for t in includes.get("tweets") or []}
 
     jobs_inserted = 0
     manual_inserted = 0
@@ -126,7 +120,7 @@ async def classify_new_tweets(
     for t in data:
         if t["id"] not in new_ids:
             continue
-        author = users_by_id.get(t.get("author_id", ""), {}) or {}
+        author: XAuthor = users_by_id.get(t.get("author_id", ""), {})
 
         spam_reason = spam_dismiss_reason(author)
 
@@ -179,9 +173,9 @@ async def classify_new_tweets(
 
 
 def _should_flag_as_image(
-    tweet: dict[str, Any],
-    author: dict[str, Any],
-    ref_tweets_by_id: dict[str, dict[str, Any]],
+    tweet: XTweet,
+    author: XAuthor,
+    ref_tweets_by_id: dict[str, XTweet],
 ) -> bool:
     """Tweet has media + short caption + some hiring signal → manual review."""
     attachments = tweet.get("attachments") or {}
@@ -190,7 +184,7 @@ def _should_flag_as_image(
         return False
 
     text = tweet.get("text") or ""
-    # unwrap retweet
+    # If this is a retweet, the body lives on the referenced tweet, not the RT.
     for r in tweet.get("referenced_tweets") or []:
         if r.get("type") == "retweeted":
             src = ref_tweets_by_id.get(r.get("id", ""))
@@ -200,7 +194,7 @@ def _should_flag_as_image(
     if len(text) > IMAGE_SHORT_TEXT_THRESHOLD:
         return False
 
-    bio = (author or {}).get("description") or ""
+    bio = author.get("description") or ""
     bio_recruiter = any(p.search(bio) for p in BIO_RECRUITER_PATTERNS)
     weak_hiring = any(p.search(text) for p in WEAK_HIRING_PATTERNS)
     return bio_recruiter or weak_hiring
@@ -259,7 +253,7 @@ async def _insert_job_posting(
 
 
 async def write_worker_state(
-    session: AsyncSession, key: str, value: dict[str, Any]
+    session: AsyncSession, key: str, value: dict[str, object]
 ) -> None:
     stmt = (
         pg_insert(WorkerState)
@@ -282,8 +276,8 @@ async def existing_tweet_ids(
 
 async def upsert_page(
     session: AsyncSession,
-    tweets: list[dict[str, Any]],
-    includes: dict[str, Any],
+    tweets: list[XTweet],
+    includes: XIncludes,
     *,
     source_type: str = "feed",
 ) -> int:
