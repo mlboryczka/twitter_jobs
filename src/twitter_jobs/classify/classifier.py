@@ -21,7 +21,7 @@ from anthropic import AsyncAnthropic
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from twitter_jobs.classify.industries import INDUSTRIES
+from twitter_jobs.classify.industries import INDUSTRIES, ROLE_CATEGORIES, SENIORITIES
 from twitter_jobs.config import get_settings
 from twitter_jobs.db.models import JobPosting, TrainingExample, Tweet
 from twitter_jobs.db.session import session_scope
@@ -30,9 +30,6 @@ logger = logging.getLogger(__name__)
 
 MODEL = "claude-haiku-4-5"
 MAX_TOKENS = 1024
-
-ROLE_CATEGORIES = ["corp_dev", "strategy", "bd", "ops", "cos", "unknown"]
-SENIORITIES = ["ic", "senior", "lead", "director", "vp", "exec", "unknown"]
 
 TOOL_SCHEMA = {
     "name": "record_classification",

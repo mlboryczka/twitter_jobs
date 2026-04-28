@@ -48,31 +48,6 @@ async def get_me(client: XClient) -> dict[str, Any]:
     )
 
 
-async def get_home_timeline(
-    client: XClient,
-    user_id: str,
-    *,
-    since_id: str | None = None,
-    next_token: str | None = None,
-    max_results: int = 100,
-) -> dict[str, Any]:
-    params: dict[str, Any] = {
-        "max_results": max_results,
-        "tweet.fields": TWEET_FIELDS,
-        "user.fields": USER_FIELDS,
-        "expansions": EXPANSIONS,
-    }
-    if since_id:
-        params["since_id"] = since_id
-    if next_token:
-        params["pagination_token"] = next_token
-    return await client.get(
-        f"/2/users/{user_id}/timelines/reverse_chronological",
-        params=params,
-        endpoint_key="users_timelines_reverse_chronological",
-    )
-
-
 async def get_tweets(client: XClient, ids: list[str]) -> dict[str, Any]:
     if not ids:
         return {"data": []}

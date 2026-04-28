@@ -19,20 +19,20 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from sqlalchemy import delete as sa_delete
+
 from twitter_jobs.db.models import WorkerState
 from twitter_jobs.db.session import session_scope
-from twitter_jobs.ingest.feed_worker import (
-    _classify_new,
-    _existing_tweet_ids,
-    _id_gt,
-    _upsert_page,
-    _write_worker_state,
+from twitter_jobs.ingest.common import (
+    classify_new_tweets,
+    existing_tweet_ids,
+    id_gt,
+    upsert_page,
+    write_worker_state,
 )
 from twitter_jobs.x_api.auth import XAuth
 from twitter_jobs.x_api.client import XAPIError, XClient
 from twitter_jobs.x_api.endpoints import search_recent
-from twitter_jobs.config import get_settings
-from sqlalchemy import delete as sa_delete
 
 logger = logging.getLogger(__name__)
 
@@ -141,22 +141,22 @@ async def run_search_pull() -> dict[str, Any]:
                     break
 
                 async with session_scope() as session:
-                    existing_ids = await _existing_tweet_ids(
+                    existing_ids = await existing_tweet_ids(
                         session, [t["id"] for t in data]
                     )
-                    inserted = await _upsert_page(
+                    inserted = await upsert_page(
                         session, data, includes, source_type="search"
                     )
 
                 new_ids = [t["id"] for t in data if t["id"] not in existing_ids]
-                jobs, manual = await _classify_new(client, data, includes, new_ids)
+                jobs, manual = await classify_new_tweets(client, data, includes, new_ids)
                 jobs_for_query += jobs
                 manual_for_query += manual
 
                 new_for_query += inserted
                 page_newest = meta.get("newest_id")
                 if page_newest and (
-                    newest_id_seen is None or _id_gt(page_newest, newest_id_seen)
+                    newest_id_seen is None or id_gt(page_newest, newest_id_seen)
                 ):
                     newest_id_seen = page_newest
 
@@ -170,7 +170,7 @@ async def run_search_pull() -> dict[str, Any]:
 
             if newest_id_seen and newest_id_seen != since_id:
                 async with session_scope() as session:
-                    await _write_worker_state(
+                    await write_worker_state(
                         session, since_id_key, {"since_id": newest_id_seen}
                     )
 
@@ -194,6 +194,6 @@ async def run_search_pull() -> dict[str, Any]:
         "ran_at": datetime.utcnow().isoformat() + "Z",
     }
     async with session_scope() as session:
-        await _write_worker_state(session, LAST_PULL_SUMMARY_KEY, summary)
+        await write_worker_state(session, LAST_PULL_SUMMARY_KEY, summary)
     logger.info("search_pull done: %s", summary)
     return summary

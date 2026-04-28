@@ -1,8 +1,14 @@
-"""Home-timeline feed worker — paginated pulls, upserts, cursor state, classification dispatch."""
+"""Shared ingestion helpers used by every X-API worker.
+
+Spam heuristics, the prefilter+classifier pipeline that turns raw tweets into
+job_postings, and low-level upsert/cursor helpers all live here so individual
+workers contain only the query/pagination logic specific to their endpoint.
+"""
 
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime
 from typing import Any
 
@@ -17,30 +23,26 @@ from twitter_jobs.classify.prefilter import (
     WEAK_HIRING_PATTERNS,
     is_potential_job,
 )
-from twitter_jobs.config import get_settings
-from twitter_jobs.db.models import ApiCall, Author, JobPosting, Tweet, TweetSource, WorkerState
+from twitter_jobs.db.models import Author, JobPosting, Tweet, TweetSource, WorkerState
 from twitter_jobs.db.session import session_scope
 from twitter_jobs.ingest.threads import reconstruct_thread
-from twitter_jobs.x_api.auth import XAuth
 from twitter_jobs.x_api.client import XClient
-from twitter_jobs.x_api.endpoints import get_home_timeline
 
 logger = logging.getLogger(__name__)
 
-FEED_SINCE_ID_KEY = "feed_since_id"
-LAST_PULL_SUMMARY_KEY = "feed_last_pull_summary"
-MAX_PAGES_PER_RUN = 10
 IMAGE_SHORT_TEXT_THRESHOLD = 140  # chars
 
-# --- spam thresholds ---
-MIN_AUTHOR_FOLLOWERS = 200          # below this we dismiss unless verified
-MIN_FOLLOWER_TO_FOLLOWING_RATIO = 0.1  # follow-back-farmer floor
-MIN_FOLLOWING_FOR_RATIO_CHECK = 500    # only apply ratio check if follows ≥ this
+# Spam thresholds — below MIN_AUTHOR_FOLLOWERS we dismiss unless verified.
+# The follow-back-farmer ratio catches accounts that aggressively follow and
+# only get a small fraction back; we only apply it once `following` is high
+# enough to be statistically meaningful.
+MIN_AUTHOR_FOLLOWERS = 200
+MIN_FOLLOWER_TO_FOLLOWING_RATIO = 0.1
+MIN_FOLLOWING_FOR_RATIO_CHECK = 500
 
-import re
-
-# Bio patterns that indicate the author is almost certainly not posting a real
-# job. Conservative list — we're filtering for blatant cases only.
+# Conservative bio patterns; the author is almost certainly not posting a real
+# job. We only flag blatant cases — false positives erode user trust faster
+# than false negatives waste a few cents of classifier spend.
 SPAM_BIO_PATTERNS = [
     re.compile(p, re.IGNORECASE)
     for p in [
@@ -105,98 +107,7 @@ def spam_dismiss_reason(author: dict[str, Any]) -> str | None:
     return None
 
 
-async def run_feed_pull() -> dict[str, Any]:
-    """Pull new tweets from the home timeline since the last cursor, classify hits."""
-    settings = get_settings()
-    if not settings.x_user_numeric_id:
-        raise RuntimeError("X_USER_NUMERIC_ID must be set for the feed worker.")
-
-    auth = XAuth(settings=settings)
-
-    async with session_scope() as session:
-        since_id = await _read_since_id(session)
-    logger.info("feed_pull starting since_id=%s", since_id)
-
-    pages = 0
-    new_tweets_total = 0
-    api_calls_total = 0
-    newest_id_seen = since_id
-    next_token: str | None = None
-    jobs_inserted = 0
-    manual_review_inserted = 0
-
-    async with XClient(auth) as client:
-        while True:
-            pages += 1
-            if pages > MAX_PAGES_PER_RUN:
-                logger.warning(
-                    "feed_pull hit MAX_PAGES_PER_RUN=%d, stopping", MAX_PAGES_PER_RUN
-                )
-                break
-
-            payload = await get_home_timeline(
-                client,
-                user_id=settings.x_user_numeric_id,
-                since_id=since_id,
-                next_token=next_token,
-                max_results=100,
-            )
-            data = payload.get("data") or []
-            includes = payload.get("includes") or {}
-            meta = payload.get("meta") or {}
-            api_calls_total += 1
-
-            if not data:
-                logger.info("feed_pull page %d: empty, done", pages)
-                break
-
-            async with session_scope() as session:
-                existing_ids = await _existing_tweet_ids(session, [t["id"] for t in data])
-                inserted = await _upsert_page(session, data, includes)
-
-            new_ids = [t["id"] for t in data if t["id"] not in existing_ids]
-            new_tweets_total += inserted
-            page_newest = meta.get("newest_id")
-            if page_newest and (
-                newest_id_seen is None or _id_gt(page_newest, newest_id_seen)
-            ):
-                newest_id_seen = page_newest
-
-            # Classify only the newly-ingested tweets in this page.
-            jobs, manual = await _classify_new(client, data, includes, new_ids)
-            jobs_inserted += jobs
-            manual_review_inserted += manual
-
-            if inserted == 0:
-                logger.info(
-                    "feed_pull page %d: 0 new tweets, stopping pagination", pages
-                )
-                break
-
-            next_token = meta.get("next_token")
-            if not next_token:
-                break
-
-    async with session_scope() as session:
-        cost_total = await _sum_recent_cost(session, pages)
-        if newest_id_seen and newest_id_seen != since_id:
-            await _write_since_id(session, newest_id_seen)
-        summary = {
-            "new_tweets": new_tweets_total,
-            "api_calls": api_calls_total,
-            "cost_usd": cost_total,
-            "pages": pages,
-            "jobs_inserted": jobs_inserted,
-            "manual_review_inserted": manual_review_inserted,
-            "ran_at": datetime.utcnow().isoformat() + "Z",
-        }
-        await _write_worker_state(session, LAST_PULL_SUMMARY_KEY, summary)
-
-    logger.info("feed_pull done: %s", summary)
-    return summary
-
-
-async def _classify_new(
+async def classify_new_tweets(
     client: XClient,
     data: list[dict[str, Any]],
     includes: dict[str, Any],
@@ -347,18 +258,7 @@ async def _insert_job_posting(
         )
 
 
-async def _read_since_id(session: AsyncSession) -> str | None:
-    row = await session.get(WorkerState, FEED_SINCE_ID_KEY)
-    if row is None:
-        return None
-    return row.value.get("since_id")
-
-
-async def _write_since_id(session: AsyncSession, since_id: str) -> None:
-    await _write_worker_state(session, FEED_SINCE_ID_KEY, {"since_id": since_id})
-
-
-async def _write_worker_state(
+async def write_worker_state(
     session: AsyncSession, key: str, value: dict[str, Any]
 ) -> None:
     stmt = (
@@ -371,16 +271,7 @@ async def _write_worker_state(
     await session.execute(stmt)
 
 
-async def _sum_recent_cost(session: AsyncSession, n_pages: int) -> float:
-    if n_pages <= 0:
-        return 0.0
-    result = await session.execute(
-        select(ApiCall.cost_usd).order_by(ApiCall.id.desc()).limit(n_pages)
-    )
-    return float(sum(row for row in result.scalars()))
-
-
-async def _existing_tweet_ids(
+async def existing_tweet_ids(
     session: AsyncSession, ids: list[str]
 ) -> set[str]:
     if not ids:
@@ -389,7 +280,7 @@ async def _existing_tweet_ids(
     return {r for (r,) in res.all()}
 
 
-async def _upsert_page(
+async def upsert_page(
     session: AsyncSession,
     tweets: list[dict[str, Any]],
     includes: dict[str, Any],
@@ -469,21 +360,19 @@ async def _upsert_page(
     return new_count
 
 
-def _id_gt(a: str, b: str) -> bool:
+def id_gt(a: str, b: str) -> bool:
+    """Compare two snowflake-style numeric string IDs without int overflow.
+
+    Tweet IDs are kept as strings because they exceed JS Number range; this
+    helper does the comparison the way the X API would on the server side.
+    """
     if len(a) != len(b):
         return len(a) > len(b)
     return a > b
 
 
 def _parse_x_ts(value: str | None) -> datetime | None:
-    """Parse X's ISO-8601 timestamp (e.g. '2026-04-25T22:40:34.000Z') to datetime."""
+    """Parse X's ISO-8601 timestamp (e.g. '2026-04-25T22:40:34.000Z')."""
     if value is None:
         return None
-    # Python 3.11+ accepts the trailing 'Z' directly.
     return datetime.fromisoformat(value)
-
-
-async def get_last_pull_summary() -> dict[str, Any] | None:
-    async with session_scope() as session:
-        row = await session.get(WorkerState, LAST_PULL_SUMMARY_KEY)
-        return row.value if row else None

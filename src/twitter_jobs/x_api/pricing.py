@@ -25,18 +25,6 @@ class EndpointPrice:
 # compute cost by multiplying cost_per_resource_usd by the number of items the
 # call actually returned.
 PRICING: dict[str, EndpointPrice] = {
-    # Home timeline — Owned Reads, historically $0.005 / tweet.
-    "users_timelines_reverse_chronological": EndpointPrice(
-        endpoint="/2/users/:id/timelines/reverse_chronological",
-        cost_per_resource_usd=0.005,
-        resource_name="tweet",
-    ),
-    # Bookmarks — $0.001 / tweet ("Owned Reads").
-    "users_bookmarks": EndpointPrice(
-        endpoint="/2/users/:id/bookmarks",
-        cost_per_resource_usd=0.001,
-        resource_name="tweet",
-    ),
     # Recent search — $0.005 / tweet.
     "tweets_search_recent": EndpointPrice(
         endpoint="/2/tweets/search/recent",

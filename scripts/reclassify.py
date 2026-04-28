@@ -24,9 +24,7 @@ from twitter_jobs.classify.industries import is_avoided  # noqa: E402
 from twitter_jobs.classify.prefilter import is_potential_job  # noqa: E402
 from twitter_jobs.db.models import JobPosting, Tweet  # noqa: E402
 from twitter_jobs.db.session import session_scope  # noqa: E402
-from twitter_jobs.ingest.feed_worker import (  # noqa: E402
-    spam_dismiss_reason,
-)
+from twitter_jobs.ingest.common import spam_dismiss_reason  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("reclassify")

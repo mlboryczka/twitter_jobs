@@ -17,6 +17,7 @@ from twitter_jobs.classify.industries import (
     INDUSTRY_LABELS,
     PRIORITY_1,
     PRIORITY_2,
+    ROLE_LABELS,
     get_priority,
 )
 from twitter_jobs.classify.training import (
@@ -26,18 +27,9 @@ from twitter_jobs.classify.training import (
 )
 from twitter_jobs.db.models import ApiCall, JobPosting, TrainingExample, Tweet, WorkerState
 from twitter_jobs.db.session import session_scope
-from twitter_jobs.ingest.feed_worker import spam_dismiss_reason
+from twitter_jobs.ingest.common import spam_dismiss_reason
 from twitter_jobs.ingest.search_worker import LAST_PULL_SUMMARY_KEY
 from twitter_jobs.web.auth import require_basic_auth
-
-ROLE_LABELS = {
-    "corp_dev": "Corp Dev",
-    "strategy": "Strategy",
-    "bd": "BD",
-    "ops": "Ops",
-    "cos": "Chief of Staff",
-    "unknown": "Unknown",
-}
 
 _TWITTER_HOSTS = ("twitter.com", "x.com", "t.co")
 

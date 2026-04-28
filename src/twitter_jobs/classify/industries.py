@@ -1,13 +1,31 @@
-"""Industry taxonomy + priority rules.
+"""Industry + role taxonomy and priority rules.
 
-The classifier returns one of INDUSTRIES for each posting. The feed worker
-uses PRIORITY_1 / PRIORITY_2 / AVOID to decide whether to surface it on the
-inbox or auto-dismiss it.
+The classifier returns one of INDUSTRIES for each posting and one of
+ROLE_CATEGORIES for the role. The ingest layer uses PRIORITY_1 / PRIORITY_2 /
+AVOID to decide whether to surface a posting on the inbox or auto-dismiss it.
 
-Edit these sets to change the user's industry preferences.
+Edit the sets in this file to change which industries / roles the user cares
+about.
 """
 
 from __future__ import annotations
+
+# Role buckets the classifier can assign. Mirrored in the database CHECK
+# constraint on job_postings.role_category.
+ROLE_CATEGORIES = ["corp_dev", "strategy", "bd", "ops", "cos", "unknown"]
+
+ROLE_LABELS = {
+    "corp_dev": "Corp Dev",
+    "strategy": "Strategy",
+    "bd": "BD",
+    "ops": "Ops",
+    "cos": "Chief of Staff",
+    "unknown": "Unknown",
+}
+
+# Seniority bucket the classifier can assign. Mirrored in the DB CHECK
+# constraint on job_postings.seniority.
+SENIORITIES = ["ic", "senior", "lead", "director", "vp", "exec", "unknown"]
 
 # All possible industry buckets the classifier can return. "other" is the
 # catch-all for anything that doesn't fit cleanly.
