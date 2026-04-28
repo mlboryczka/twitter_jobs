@@ -29,6 +29,7 @@
 .env.local
 .idea/
 .installed.cfg
+.mypy_cache/
 .uv/
 .venv/
 .vscode/
