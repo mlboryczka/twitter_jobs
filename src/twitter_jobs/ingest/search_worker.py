@@ -21,6 +21,7 @@ from typing import Any
 
 from sqlalchemy import delete as sa_delete
 
+from twitter_jobs.config import get_settings
 from twitter_jobs.db.models import WorkerState
 from twitter_jobs.db.session import session_scope
 from twitter_jobs.ingest.common import (

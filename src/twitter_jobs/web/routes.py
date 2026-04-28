@@ -185,9 +185,6 @@ def build_router(templates: Jinja2Templates) -> APIRouter:
                 raise HTTPException(status_code=404)
             job.status = status_value
             job.user_feedback = feedback.strip() or None
-            if status_value == "dismissed":
-                # Mirror feedback into dismissal_reason for backward-compat readers.
-                job.dismissal_reason = feedback.strip() or None
             job.status_changed_at = datetime.now(timezone.utc)
             tweet = await session.get(
                 Tweet, tweet_id, options=[joinedload(Tweet.author)]

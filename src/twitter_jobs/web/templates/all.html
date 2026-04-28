@@ -91,7 +91,7 @@
             {% elif job.status == 'accepted' %}
               <span class="text-label-sm font-medium px-sm py-xs rounded-full bg-secondary-container/40 text-on-secondary-container border border-secondary-container">accepted</span>
             {% else %}
-              <span class="text-label-sm font-medium px-sm py-xs rounded-full bg-error-container/40 text-on-error-container border border-error-container" title="{{ job.dismissal_reason or 'dismissed' }}">
+              <span class="text-label-sm font-medium px-sm py-xs rounded-full bg-error-container/40 text-on-error-container border border-error-container" title="{{ job.dismissal_reason or job.user_feedback or 'dismissed' }}">
                 {% if job.dismissal_reason and job.dismissal_reason.startswith('auto:') %}auto-dismissed{% else %}dismissed{% endif %}
               </span>
             {% endif %}
