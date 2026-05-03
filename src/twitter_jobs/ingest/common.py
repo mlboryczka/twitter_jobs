@@ -7,8 +7,10 @@ workers contain only the query/pagination logic specific to their endpoint.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
+import time
 from datetime import datetime
 
 from sqlalchemy import select
@@ -31,6 +33,12 @@ from twitter_jobs.x_api.types import XAuthor, XIncludes, XTweet
 logger = logging.getLogger(__name__)
 
 IMAGE_SHORT_TEXT_THRESHOLD = 140  # chars
+
+# Minimum spacing between Anthropic classifier calls. The Haiku tier-1 limit
+# is 50 RPM; 1.5s = 40 RPM keeps us comfortably under, so the SDK never has
+# to retry on a 429. Bump up if you upgrade your Anthropic tier.
+CLASSIFIER_MIN_INTERVAL_SEC = 1.5
+_last_classify_call = 0.0
 
 # Spam thresholds — below MIN_AUTHOR_FOLLOWERS we dismiss unless verified.
 # The follow-back-farmer ratio catches accounts that aggressively follow and
@@ -157,6 +165,7 @@ async def classify_new_tweets(
         except Exception:
             logger.exception("thread reconstruction failed, continuing with single tweet")
 
+        await _throttle_classifier()
         classification = await classify(t, author, thread_tweets)
         if classification is None or not classification.is_target:
             continue
@@ -170,6 +179,15 @@ async def classify_new_tweets(
         jobs_inserted += 1
 
     return jobs_inserted, manual_inserted
+
+
+async def _throttle_classifier() -> None:
+    """Sleep until the minimum spacing between Anthropic calls has elapsed."""
+    global _last_classify_call
+    elapsed = time.monotonic() - _last_classify_call
+    if elapsed < CLASSIFIER_MIN_INTERVAL_SEC:
+        await asyncio.sleep(CLASSIFIER_MIN_INTERVAL_SEC - elapsed)
+    _last_classify_call = time.monotonic()
 
 
 def _should_flag_as_image(
